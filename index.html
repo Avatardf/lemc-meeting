@@ -299,6 +299,9 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
       </div>
       <div id="l-alert"></div>
       <button class="btn btn-primary btn-full" onclick="doLogin()" data-i18n="auth.signin"></button>
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="openForgotModal()" style="background:none;border:none;color:var(--muted);font-size:.8em;cursor:pointer;text-decoration:underline;padding:0" data-i18n="auth.forgot"></button>
+      </div>
     </div>
     <div id="auth-register" style="display:none">
       <div class="form-group">
@@ -748,6 +751,57 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
 </div>
 
 <!-- ══ MODALS ══ -->
+<!-- ── FORGOT PASSWORD MODAL (auth screen) ── -->
+<div class="modal-overlay" id="forgot-modal" style="z-index:1100">
+  <div class="modal">
+    <h3>🔑 Redefinir Senha / Reset Password</h3>
+    <p style="color:var(--muted);font-size:.82em;margin-bottom:14px">Informe seu e-mail, o código admin e a nova senha.</p>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="fp-email" placeholder="seu@email.com">
+    </div>
+    <div class="form-group">
+      <label>Código Admin</label>
+      <input type="password" id="fp-code" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Nova Senha (mín. 6 caracteres)</label>
+      <input type="password" id="fp-new" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="fp-new2" placeholder="••••••••" onkeypress="if(event.key==='Enter') doResetPassword()">
+    </div>
+    <div id="fp-alert"></div>
+    <div style="display:flex;gap:9px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="doResetPassword()">Redefinir</button>
+      <button class="btn btn-secondary" onclick="closeModal('forgot-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN RESET PASSWORD MODAL ── -->
+<div class="modal-overlay" id="admin-reset-modal">
+  <div class="modal">
+    <h3>🔑 Redefinir Senha do Usuário</h3>
+    <p style="color:var(--muted);font-size:.82em;margin-bottom:14px">Defina uma nova senha para <strong id="arp-email-label" style="color:var(--gold)"></strong></p>
+    <input type="hidden" id="arp-email">
+    <div class="form-group">
+      <label>Nova Senha (mín. 6 caracteres)</label>
+      <input type="password" id="arp-new" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="arp-new2" placeholder="••••••••" onkeypress="if(event.key==='Enter') doAdminResetPassword()">
+    </div>
+    <div id="arp-alert"></div>
+    <div style="display:flex;gap:9px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="doAdminResetPassword()">Salvar Nova Senha</button>
+      <button class="btn btn-secondary" onclick="closeModal('admin-reset-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="saved-modal">
   <div class="modal">
     <div style="font-size:2.8em;text-align:center;margin-bottom:8px">✅</div>
@@ -897,6 +951,8 @@ const TRANS = {
     'f.email':'E-mail', 'f.email.ph':'seu@email.com',
     'f.password':'Senha', 'f.passmin':'Senha (mín. 6 caracteres)',
     'f.passconfirm':'Confirmar senha',
+    'auth.forgot':'Esqueceu a senha?',
+    'err.notfound':'E-mail não cadastrado. Crie uma conta:',
     'nav.home':'Início', 'nav.kit':'Kit', 'nav.profile':'Minha Inscrição',
     'nav.admin':'Administração', 'nav.logout':'Sair',
     'kit.page.title':'🎒 Kit de Participação 2026',
@@ -968,6 +1024,8 @@ const TRANS = {
     'f.email':'E-mail', 'f.email.ph':'your@email.com',
     'f.password':'Password', 'f.passmin':'Password (min. 6 characters)',
     'f.passconfirm':'Confirm Password',
+    'auth.forgot':'Forgot password?',
+    'err.notfound':'E-mail not registered. Create an account:',
     'nav.home':'Home', 'nav.kit':'Kit', 'nav.profile':'My Registration',
     'nav.admin':'Administration', 'nav.logout':'Sign Out',
     'kit.page.title':'🎒 Participation Kit 2026',
@@ -1145,9 +1203,63 @@ async function doLogin() {
   if (!email||!pass){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}</div>`; return; }
   const hash  = await sha256(email+pass);
   const users = await DB.users();
-  const user  = users.find(u=>u.email===email&&u.hash===hash);
-  if (!user){ div.innerHTML=`<div class="alert alert-e">${t('err.wrongpass')}</div>`; return; }
+  const byEmail = users.find(u=>u.email===email);
+  if (!byEmail){
+    div.innerHTML=`<div class="alert alert-e">${t('err.notfound')} <button onclick="switchAuthTab('register')" style="background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;font-size:inherit;padding:0">${t('auth.register')}</button></div>`;
+    return;
+  }
+  if (byEmail.hash!==hash){ div.innerHTML=`<div class="alert alert-e">${t('err.wrongpass')}</div>`; return; }
   currentUser = { email }; launchApp();
+}
+
+function openForgotModal() {
+  ['fp-email','fp-code','fp-new','fp-new2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fp-alert').innerHTML='';
+  openModal('forgot-modal');
+}
+
+async function doResetPassword() {
+  const email = document.getElementById('fp-email').value.trim().toLowerCase();
+  const code  = document.getElementById('fp-code').value;
+  const np    = document.getElementById('fp-new').value;
+  const np2   = document.getElementById('fp-new2').value;
+  const div   = document.getElementById('fp-alert');
+  if (!email||!code||!np){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}</div>`; return; }
+  if (code!==ADMIN_SECRET){ div.innerHTML=`<div class="alert alert-e">Código admin incorreto.</div>`; return; }
+  if (np.length<6){ div.innerHTML=`<div class="alert alert-e">${t('err.passlen')}</div>`; return; }
+  if (np!==np2){ div.innerHTML=`<div class="alert alert-e">${t('err.passmatch')}</div>`; return; }
+  const users  = await DB.users();
+  const exists = users.find(u=>u.email===email);
+  if (!exists){ div.innerHTML=`<div class="alert alert-e">${t('err.notfound')}</div>`; return; }
+  const hash = await sha256(email+np);
+  await DB.upsertUser({ ...exists, hash });
+  div.innerHTML=`<div class="alert alert-s">Senha redefinida com sucesso!</div>`;
+  setTimeout(()=>closeModal('forgot-modal'),1800);
+}
+
+function openAdminResetModal(email) {
+  document.getElementById('arp-email').value = email;
+  document.getElementById('arp-email-label').textContent = email;
+  ['arp-new','arp-new2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('arp-alert').innerHTML='';
+  openModal('admin-reset-modal');
+}
+
+async function doAdminResetPassword() {
+  const email = document.getElementById('arp-email').value;
+  const np    = document.getElementById('arp-new').value;
+  const np2   = document.getElementById('arp-new2').value;
+  const div   = document.getElementById('arp-alert');
+  if (!np){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}</div>`; return; }
+  if (np.length<6){ div.innerHTML=`<div class="alert alert-e">${t('err.passlen')}</div>`; return; }
+  if (np!==np2){ div.innerHTML=`<div class="alert alert-e">${t('err.passmatch')}</div>`; return; }
+  const users  = await DB.users();
+  const exists = users.find(u=>u.email===email);
+  if (!exists){ div.innerHTML=`<div class="alert alert-e">Usuário não encontrado no sistema.</div>`; return; }
+  const hash = await sha256(email+np);
+  await DB.upsertUser({ ...exists, hash });
+  div.innerHTML=`<div class="alert alert-s">Senha de ${email} redefinida!</div>`;
+  setTimeout(()=>closeModal('admin-reset-modal'),1800);
 }
 
 async function doRegister() {
@@ -1447,6 +1559,7 @@ async function renderAdminTable() {
       <td style="color:var(--gold-light);font-weight:700">R$&nbsp;${r.kitTotal||0}</td>
       <td>${badge}</td>
       <td><div class="actions">${toggle}
+        <button class="btn btn-secondary btn-sm" onclick="openAdminResetModal('${r.email}')" title="Redefinir senha">🔑</button>
         <button class="btn btn-danger btn-sm" onclick="deleteReg('${r.email}')">✕</button>
       </div></td></tr>`;
   }).join('');
