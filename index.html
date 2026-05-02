@@ -449,7 +449,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           </div>
           <div class="form-group">
             <label data-i18n="f.passport"></label>
-            <input type="text" id="p-passport" placeholder="Ex: BR123456">
+            <input type="text" id="p-passport" data-i18n-ph="f.passport.ph">
           </div>
         </div>
         <div class="form-row">
@@ -563,7 +563,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           <div class="form-row">
             <div class="form-group">
               <label data-i18n="f.passport"></label>
-              <input type="text" id="c-passport" placeholder="Ex: BR654321">
+              <input type="text" id="c-passport" data-i18n-ph="f.passport.ph">
             </div>
           </div>
         </div>
@@ -575,6 +575,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
         <div class="kit-row">
           <div>
             <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.qty.label"></label>
+            <div style="color:var(--muted);font-size:.75em;margin-bottom:5px" id="kit-unit-price">R$ 72,00 / kit</div>
             <div class="qty-ctrl">
               <button class="qty-btn" onclick="changeKitQty(-1)">−</button>
               <span class="qty-num" id="kit-qty">1</span>
@@ -700,7 +701,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end">
             <div class="form-group" style="margin:0;flex:1;min-width:150px">
               <label>Buscar / Search</label>
-              <input type="text" id="a-search" placeholder="Nome, capítulo, e-mail…" oninput="renderAdminTable()">
+              <input type="text" id="a-search" placeholder="Name / Nome · Chapter · E-mail…" oninput="renderAdminTable()">
             </div>
             <div class="form-group" style="margin:0">
               <label>Status</label>
@@ -758,7 +759,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
     <p style="color:var(--muted);font-size:.82em;margin-bottom:14px">Informe seu e-mail, o código admin e a nova senha.</p>
     <div class="form-group">
       <label>E-mail</label>
-      <input type="email" id="fp-email" placeholder="seu@email.com">
+      <input type="email" id="fp-email" data-i18n-ph="f.email.ph">
     </div>
     <div class="form-group">
       <label>Código Admin</label>
@@ -868,9 +869,9 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
 // ══════════════════════════════════════════
 const ADMIN_EMAILS = ['marcello.barros.rj@gmail.com', 'admin@lemc.com'];
 const ADMIN_SECRET = 'lemc2026';
-const KIT_PRICE    = 72;
-const COMP_SHIRT   = 44;
-const COMP_CUP     = 12;
+let KIT_PRICE    = 72;
+let COMP_SHIRT   = 44;
+let COMP_CUP     = 12;
 
 // ══════════════════════════════════════════
 //  SUPABASE
@@ -971,7 +972,8 @@ const TRANS = {
     'f.rank':'Graduação *', 'f.motoclub':'Moto Clube *', 'f.chapter':'Chapter *', 'f.chapter.ph':'Ex: Rio de Janeiro',
     'f.country':'País *', 'f.country.ph':'Brasil',
     'f.phone':'Telefone / WhatsApp *', 'f.phone.ph':'(21) 99999-9999',
-    'f.passport':'Número do Passaporte *', 'f.shirtsize':'Tamanho da Camiseta *',
+    'f.passport':'Número do Passaporte *', 'f.passport.ph':'Ex: BR123456',
+    'f.shirtsize':'Tamanho da Camiseta *',
     'opt.select':'Selecione…',
     'travel.arrival':'Chegada', 'travel.return':'Retorno',
     'travel.flightdate':'Data do Voo para a Europa *',
@@ -989,8 +991,8 @@ const TRANS = {
     'comp.with':'Com acompanhante', 'comp.details':'Dados do Acompanhante',
     'comp.chaporg':'Capítulo / Organização', 'comp.chaporg.ph':'Clube ou organização',
     'comp.origin':'País de Origem',
-    'kit.desc':'Kit completo (R$ 72,00): T-shirt manga longa · Copo com tirante · Ficha de poler · Mochila',
-    'kit.qty.label':'Quantidade de kits (R$ 72,00 cada)',
+    'kit.desc':'Kit completo: T-shirt manga longa · Copo com tirante · Ficha de poler · Mochila',
+    'kit.qty.label':'Quantidade de kits',
     'kit.extras.title':'Itens adicionais para acompanhante',
     'kit.shirt':'🧥 Camiseta feminina manga longa',
     'kit.shirt.sub':'Item feminino adicional para acompanhante',
@@ -1044,7 +1046,8 @@ const TRANS = {
     'f.rank':'Rank *', 'f.motoclub':'Moto Club *', 'f.chapter':'Chapter *', 'f.chapter.ph':'e.g. Rio de Janeiro',
     'f.country':'Country *', 'f.country.ph':'Brazil',
     'f.phone':'Phone / WhatsApp *', 'f.phone.ph':'+1 (555) 000-0000',
-    'f.passport':'Passport Number *', 'f.shirtsize':'T-Shirt Size *',
+    'f.passport':'Passport Number *', 'f.passport.ph':'e.g. AB123456',
+    'f.shirtsize':'T-Shirt Size *',
     'opt.select':'Select…',
     'travel.arrival':'Arrival', 'travel.return':'Return',
     'travel.flightdate':'Flight Date to Europe *',
@@ -1062,8 +1065,8 @@ const TRANS = {
     'comp.with':'With companion', 'comp.details':'Companion Details',
     'comp.chaporg':'Chapter / Organization', 'comp.chaporg.ph':'Club or organization',
     'comp.origin':'Country of Origin',
-    'kit.desc':'Full kit (R$ 72.00): Long sleeve t-shirt · Cup with strap · Poler chip · Backpack',
-    'kit.qty.label':'Number of kits (R$ 72.00 each)',
+    'kit.desc':'Full kit: Long sleeve t-shirt · Cup with strap · Poler chip · Backpack',
+    'kit.qty.label':'Number of kits',
     'kit.extras.title':'Additional items for companion',
     'kit.shirt':"🧥 Women's long sleeve t-shirt",
     'kit.shirt.sub':'Additional women\'s item for companion',
@@ -1943,15 +1946,17 @@ async function updateKitPricesFromDB() {
   const items = await DB.kitItems();
   const kit   = items.filter(k=>k.category==='kit'&&k.active);
   const extra = items.filter(k=>k.category==='extra'&&k.active);
-  window.KIT_PRICE  = kit.reduce((s,k)=>s+(k.price||0),0) || 72;
-  window.COMP_SHIRT = extra.find(k=>k.name.toLowerCase().includes('camis'))?.price || 44;
-  window.COMP_CUP   = extra.find(k=>k.name.toLowerCase().includes('cop'))?.price || 12;
+  KIT_PRICE  = kit.reduce((s,k)=>s+(k.price||0),0) || 72;
+  COMP_SHIRT = extra.find(k=>k.name.toLowerCase().includes('camis'))?.price || 44;
+  COMP_CUP   = extra.find(k=>k.name.toLowerCase().includes('cop'))?.price || 12;
   // Update all price displays
-  const fmt = `R$ ${window.KIT_PRICE},00`;
+  const fmt = `R$ ${KIT_PRICE},00`;
   const homeEl = document.getElementById('home-kit-price');
   if (homeEl) homeEl.textContent = fmt;
   const kitPageEl = document.getElementById('kit-page-total');
   if (kitPageEl) kitPageEl.textContent = fmt;
+  const unitEl = document.getElementById('kit-unit-price');
+  if (unitEl) unitEl.textContent = `${fmt} / kit`;
   updateKitUI();
 }
 
