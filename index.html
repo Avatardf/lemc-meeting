@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LEMC · 8th International Meeting · Munich 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <style>
@@ -189,6 +190,42 @@ main { max-width:980px; margin:26px auto; padding:0 15px; }
 .club-name { font-size:.88em; font-weight:600; }
 .club-country { font-size:.72em; color:var(--muted); margin-top:1px; }
 
+/* ── KIT PAGE ── */
+.kit-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-bottom:22px; }
+.kit-item-card { background:#111; border:1px solid var(--border); border-radius:8px; overflow:hidden;
+  transition:border-color .2s; display:flex; flex-direction:column; }
+.kit-item-card:hover { border-color:var(--gold); }
+.kit-item-img { width:100%; height:180px; object-fit:cover; background:#0a0a0a; display:block; }
+.kit-item-img-ph { width:100%; height:180px; background:linear-gradient(135deg,#111,#1a1a1a);
+  display:flex; align-items:center; justify-content:center; font-size:3em; }
+.kit-item-body { padding:13px 14px; flex:1; display:flex; flex-direction:column; }
+.kit-item-name { color:var(--gold); font-weight:700; font-size:.95em; margin-bottom:6px; }
+.kit-item-desc { color:var(--muted); font-size:.82em; line-height:1.5; flex:1; }
+.kit-price-bar { border:1px solid var(--gold); border-radius:8px;
+  padding:16px 22px; display:flex; align-items:center; justify-content:space-between;
+  background:rgba(201,168,76,.05); margin-top:4px; }
+.kit-price-bar .kpb-label { color:var(--muted); font-size:.86em; text-transform:uppercase; letter-spacing:1px; }
+.kit-price-bar .kpb-value { color:var(--gold); font-size:2em; font-weight:700; line-height:1; }
+
+/* ── ADMIN KIT MANAGEMENT ── */
+.kit-admin-section { display:none; }
+.kit-admin-section.show { display:block; }
+.kit-admin-item { background:#111; border:1px solid var(--border); border-radius:7px;
+  margin-bottom:11px; overflow:hidden; }
+.kit-admin-item-header { display:flex; align-items:center; gap:10px;
+  padding:10px 14px; cursor:pointer; }
+.kit-admin-item-header:hover { background:rgba(201,168,76,.04); }
+.kit-admin-thumb { width:42px; height:42px; object-fit:cover; border-radius:4px;
+  border:1px solid var(--border); background:#0a0a0a; flex-shrink:0; }
+.kit-admin-thumb-ph { width:42px; height:42px; border-radius:4px; border:1px solid var(--border);
+  background:#1a1a1a; display:flex; align-items:center; justify-content:center;
+  font-size:1.4em; flex-shrink:0; }
+.kit-admin-item-info { flex:1; }
+.kit-admin-item-name { font-size:.9em; font-weight:600; }
+.kit-admin-item-meta { font-size:.74em; color:var(--muted); margin-top:2px; }
+.kit-admin-edit { padding:14px 16px; border-top:1px solid var(--border); display:none; }
+.kit-admin-edit.open { display:block; }
+
 /* ── ADMIN ── */
 .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:11px; margin-bottom:18px; }
 .stat-card { background:#111; border:1px solid var(--border); border-radius:7px; padding:14px; text-align:center; }
@@ -301,6 +338,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
   </header>
   <nav>
     <button class="active" onclick="showPage('home')" data-i18n="nav.home"></button>
+    <button onclick="showPage('kit')" data-i18n="nav.kit"></button>
     <button onclick="showPage('profile')" data-i18n="nav.profile"></button>
     <button id="nav-admin" style="display:none" onclick="showPage('admin')" data-i18n="nav.admin"></button>
   </nav>
@@ -335,6 +373,22 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
       <div class="card" style="text-align:center; padding:22px">
         <p style="color:var(--muted); margin-bottom:14px; font-size:.9em" data-i18n="home.cta.text"></p>
         <button class="btn btn-primary" onclick="showPage('profile')" data-i18n="home.cta.btn"></button>
+      </div>
+    </div>
+
+    <!-- ══ KIT ══ -->
+    <div id="page-kit" class="page">
+      <div class="card">
+        <div class="card-title" data-i18n="kit.page.title"></div>
+        <p style="color:var(--muted);font-size:.86em;margin-bottom:18px" data-i18n="kit.page.sub"></p>
+        <div id="kit-items-grid" class="kit-grid"></div>
+        <div class="kit-price-bar">
+          <div>
+            <div class="kpb-label" data-i18n="kit.page.total.label"></div>
+            <div style="color:var(--muted);font-size:.75em;margin-top:2px" data-i18n="kit.page.total.note"></div>
+          </div>
+          <div class="kpb-value" id="kit-page-total">R$ 72,00</div>
+        </div>
       </div>
     </div>
 
@@ -589,9 +643,56 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
             <button class="btn btn-secondary btn-sm" onclick="generatePDF()">📄 PDF</button>
             <button class="btn btn-secondary btn-sm" onclick="openPixModal()">⚙ PIX</button>
             <button class="btn btn-secondary btn-sm" onclick="openClubsModal()">🏍 Clubes</button>
+            <button class="btn btn-secondary btn-sm" id="btn-kit-admin" onclick="toggleKitAdmin()">🎒 Kits</button>
           </div>
         </div>
         <div class="stats-grid" id="admin-stats"></div>
+
+        <!-- ── KIT ADMIN SECTION ── -->
+        <div id="kit-admin-section" class="kit-admin-section">
+          <div class="card">
+            <div class="card-title">🎒 Gestão de Itens do Kit</div>
+            <div id="kit-admin-list"></div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <div class="card-title" style="margin-bottom:12px">+ Novo Item</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nome do Item</label>
+                  <input type="text" id="ki-name" placeholder="Ex: Camiseta Manga Longa">
+                </div>
+                <div class="form-group">
+                  <label>Categoria</label>
+                  <select id="ki-category">
+                    <option value="kit">Kit Principal</option>
+                    <option value="extra">Extra Acompanhante</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Preço (R$)</label>
+                  <input type="number" id="ki-price" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Ordem</label>
+                  <input type="number" id="ki-order" placeholder="1" min="1">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="ki-desc" rows="2" placeholder="Descrição do item para exibição na página Kit"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Imagem</label>
+                <input type="file" id="ki-img" accept="image/*" onchange="previewKitImg(this)"
+                  style="background:var(--input);border:1px solid #3a3a3a;border-radius:5px;padding:7px;width:100%;color:var(--text)">
+                <img id="ki-img-preview" style="display:none;max-height:100px;margin-top:8px;border-radius:4px;border:1px solid var(--border)">
+              </div>
+              <button class="btn btn-primary" onclick="addKitItem()">Adicionar Item</button>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="padding:13px 18px">
           <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end">
             <div class="form-group" style="margin:0;flex:1;min-width:150px">
@@ -718,6 +819,74 @@ const COMP_SHIRT   = 44;
 const COMP_CUP     = 12;
 
 // ══════════════════════════════════════════
+//  SUPABASE
+// ══════════════════════════════════════════
+const SUPABASE_URL = 'https://unirffypiicirijsnibr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaXJmZnlwaWljaXJpanNuaWJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2Njk2MzEsImV4cCI6MjA5MzI0NTYzMX0.UEBFtSqVk06WEkvqVmXHFNXE6emWCYopB3G6smePMXs';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function toDb(r) {
+  return {
+    email:r.email, name:r.name, rank:r.rank, club:r.club, chapter:r.chapter,
+    country:r.country, phone:r.phone, passport:r.passport,
+    shirt_size:r.shirtSize, flight_date:r.flightDate, flight_num:r.flightNum,
+    arrival_method:r.arrivalMethod, arrival_date:r.arrivalDate, arrival_time:r.arrivalTime,
+    depart_date:r.departDate, depart_num:r.departNum, companion:r.companion,
+    comp_shirt:r.compShirt, comp_shirt_size:r.compShirtSize, comp_cup:r.compCup,
+    kit_qty:r.kitQty, kit_extra:r.kitExtra, kit_total:r.kitTotal,
+    notes:r.notes, status:r.status, created_at:r.createdAt, updated_at:r.updatedAt,
+  };
+}
+function fromDb(r) {
+  if (!r) return null;
+  return {
+    email:r.email, name:r.name, rank:r.rank, club:r.club, chapter:r.chapter,
+    country:r.country, phone:r.phone, passport:r.passport,
+    shirtSize:r.shirt_size, flightDate:r.flight_date, flightNum:r.flight_num,
+    arrivalMethod:r.arrival_method, arrivalDate:r.arrival_date, arrivalTime:r.arrival_time,
+    departDate:r.depart_date, departNum:r.depart_num, companion:r.companion,
+    compShirt:r.comp_shirt, compShirtSize:r.comp_shirt_size, compCup:r.comp_cup,
+    kitQty:r.kit_qty, kitExtra:r.kit_extra, kitTotal:r.kit_total,
+    notes:r.notes, status:r.status, createdAt:r.created_at, updatedAt:r.updated_at,
+  };
+}
+
+const DEFAULT_CLUBS = [
+  { flag:'🇧🇷', name:'LEMC Brasil – Rio de Janeiro', country:'Brasil',   brasao:'' },
+  { flag:'🇧🇷', name:'LEMC Brasil – São Paulo',      country:'Brasil',   brasao:'' },
+  { flag:'🇺🇸', name:'LEMC USA – California',        country:'EUA',      brasao:'' },
+  { flag:'🇩🇪', name:'LEMC Germany – Munich',        country:'Alemanha', brasao:'' },
+  { flag:'🇵🇹', name:'LEMC Portugal – Lisboa',       country:'Portugal', brasao:'' },
+  { flag:'🇦🇷', name:'LEMC Argentina',               country:'Argentina',brasao:'' },
+];
+
+const DB = {
+  async users()        { const {data}=await sb.from('users').select('*'); return data||[]; },
+  async upsertUser(u)  { await sb.from('users').upsert(u,{onConflict:'email'}); },
+  async regs()         { const {data}=await sb.from('registrations').select('*'); return (data||[]).map(fromDb); },
+  async getReg(email)  { const {data}=await sb.from('registrations').select('*').eq('email',email).maybeSingle(); return fromDb(data); },
+  async upsertReg(reg) { await sb.from('registrations').upsert(toDb(reg),{onConflict:'email'}); },
+  async clubs()        { const {data}=await sb.from('clubs').select('*').order('id'); return data||[]; },
+  async upsertClub(c)  { await sb.from('clubs').upsert(c,{onConflict:'name'}); },
+  async deleteClub(id) { await sb.from('clubs').delete().eq('id',id); },
+  async pix()              { const {data}=await sb.from('settings').select('value').eq('key','pix').maybeSingle(); return data?.value||'(configure a chave PIX no painel admin)'; },
+  async setPix(v)          { await sb.from('settings').upsert({key:'pix',value:v}); },
+  async kitItems()         { const {data}=await sb.from('kit_items').select('*').order('sort_order'); return data||[]; },
+  async upsertKitItem(it)  { await sb.from('kit_items').upsert(it,{onConflict:'id'}); },
+  async insertKitItem(it)  { await sb.from('kit_items').insert(it); },
+  async deleteKitItem(id)  { await sb.from('kit_items').delete().eq('id',id); },
+};
+
+const DEFAULT_KIT_ITEMS = [
+  { name:'Camiseta Manga Longa',    description:'Camiseta oficial do encontro, manga longa, cor preta com estampa exclusiva do 8th International Meeting Munich 2026.', image:'', price:44, category:'kit',   sort_order:1, active:true },
+  { name:'Copo com Tirante',        description:'Copo oficial com tirante de couro sintético para uso durante o evento.', image:'', price:12, category:'kit',   sort_order:2, active:true },
+  { name:'Ficha de Poler',          description:'Ficha personalizada do 8th International Meeting Munich 2026 para uso na mesa de poler.', image:'', price:4,  category:'kit',   sort_order:3, active:true },
+  { name:'Mochila',                 description:'Mochila oficial do evento com logo bordado e compartimentos práticos para o dia do encontro.', image:'', price:12, category:'kit',   sort_order:4, active:true },
+  { name:'Camiseta Feminina',       description:'Camiseta oficial feminina manga longa, disponível para acompanhantes.', image:'', price:44, category:'extra',  sort_order:5, active:true },
+  { name:'Copo Acompanhante',       description:'Copo oficial com tirante para acompanhante.', image:'', price:12, category:'extra',  sort_order:6, active:true },
+];
+
+// ══════════════════════════════════════════
 //  I18N
 // ══════════════════════════════════════════
 let currentLang = localStorage.getItem('lemc_lang') || 'pt';
@@ -728,8 +897,12 @@ const TRANS = {
     'f.email':'E-mail', 'f.email.ph':'seu@email.com',
     'f.password':'Senha', 'f.passmin':'Senha (mín. 6 caracteres)',
     'f.passconfirm':'Confirmar senha',
-    'nav.home':'Início', 'nav.profile':'Minha Inscrição',
+    'nav.home':'Início', 'nav.kit':'Kit', 'nav.profile':'Minha Inscrição',
     'nav.admin':'Administração', 'nav.logout':'Sair',
+    'kit.page.title':'🎒 Kit de Participação 2026',
+    'kit.page.sub':'Todos os itens incluídos no kit oficial do 8th International Meeting · Munich · Germany.',
+    'kit.page.total.label':'Valor total do kit por participante',
+    'kit.page.total.note':'Inclui todos os itens acima',
     'ev.date':'Data', 'ev.location':'Local', 'ev.event':'Evento',
     'ev.intl':'Internacional', 'ev.kit':'Kit / pessoa',
     'home.clubs':'Moto Clubes Confirmados',
@@ -795,8 +968,12 @@ const TRANS = {
     'f.email':'E-mail', 'f.email.ph':'your@email.com',
     'f.password':'Password', 'f.passmin':'Password (min. 6 characters)',
     'f.passconfirm':'Confirm Password',
-    'nav.home':'Home', 'nav.profile':'My Registration',
+    'nav.home':'Home', 'nav.kit':'Kit', 'nav.profile':'My Registration',
     'nav.admin':'Administration', 'nav.logout':'Sign Out',
+    'kit.page.title':'🎒 Participation Kit 2026',
+    'kit.page.sub':'All items included in the official kit for the 8th International Meeting · Munich · Germany.',
+    'kit.page.total.label':'Total kit value per participant',
+    'kit.page.total.note':'Includes all items above',
     'ev.date':'Date', 'ev.location':'Location', 'ev.event':'Event',
     'ev.intl':'International', 'ev.kit':'Kit / person',
     'home.clubs':'Confirmed Motorcycle Clubs',
@@ -915,17 +1092,16 @@ function rebuildShirtSelects() {
   });
 }
 
-function toggleLang() {
+async function toggleLang() {
   currentLang = currentLang === 'pt' ? 'en' : 'pt';
   localStorage.setItem('lemc_lang', currentLang);
   applyLang();
-  // Re-render dynamic parts if needed
   if (currentUser) {
-    renderClubs();
-    loadProfile();
+    await renderClubs();
+    await loadProfile();
     if (adminUnlocked || (currentUser && ADMIN_EMAILS.includes(currentUser.email))) {
       const dash = document.getElementById('admin-dash');
-      if (dash && dash.style.display !== 'none') renderAdminDashboard();
+      if (dash && dash.style.display !== 'none') await renderAdminDashboard();
     }
   }
 }
@@ -937,30 +1113,6 @@ async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
-
-// ══════════════════════════════════════════
-//  DATA LAYER
-// ══════════════════════════════════════════
-const DEFAULT_CLUBS = [
-  { brasao:'', flag:'🇧🇷', name:'LEMC Brasil – Rio de Janeiro', country:'Brasil' },
-  { brasao:'', flag:'🇧🇷', name:'LEMC Brasil – São Paulo',      country:'Brasil' },
-  { brasao:'', flag:'🇺🇸', name:'LEMC USA – California',        country:'EUA'    },
-  { brasao:'', flag:'🇩🇪', name:'LEMC Germany – Munich',        country:'Alemanha'},
-  { brasao:'', flag:'🇵🇹', name:'LEMC Portugal – Lisboa',       country:'Portugal'},
-  { brasao:'', flag:'🇦🇷', name:'LEMC Argentina',               country:'Argentina'},
-];
-const LS = {
-  users()     { return JSON.parse(localStorage.getItem('lemc_users') || '[]'); },
-  regs()      { return JSON.parse(localStorage.getItem('lemc_regs')  || '[]'); },
-  clubs()     { return JSON.parse(localStorage.getItem('lemc_clubs') || JSON.stringify(DEFAULT_CLUBS)); },
-  pix()       { return localStorage.getItem('lemc_pix') || '(configure a chave PIX no painel admin)'; },
-  saveUsers(v){ localStorage.setItem('lemc_users',JSON.stringify(v)); },
-  saveRegs(v) { localStorage.setItem('lemc_regs', JSON.stringify(v)); },
-  saveClubs(v){ localStorage.setItem('lemc_clubs',JSON.stringify(v)); },
-  savePix(v)  { localStorage.setItem('lemc_pix',v); },
-  getReg(e)   { return LS.regs().find(r=>r.email===e)||null; },
-  upsertReg(reg){ const a=LS.regs().filter(r=>r.email!==reg.email); a.push(reg); LS.saveRegs(a); },
-};
 
 // ══════════════════════════════════════════
 //  STATE
@@ -992,7 +1144,8 @@ async function doLogin() {
   const div   = document.getElementById('l-alert');
   if (!email||!pass){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}</div>`; return; }
   const hash  = await sha256(email+pass);
-  const user  = LS.users().find(u=>u.email===email&&u.hash===hash);
+  const users = await DB.users();
+  const user  = users.find(u=>u.email===email&&u.hash===hash);
   if (!user){ div.innerHTML=`<div class="alert alert-e">${t('err.wrongpass')}</div>`; return; }
   currentUser = { email }; launchApp();
 }
@@ -1006,10 +1159,10 @@ async function doRegister() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ div.innerHTML=`<div class="alert alert-e">${t('err.email')}</div>`; return; }
   if (pass.length<6){ div.innerHTML=`<div class="alert alert-e">${t('err.passlen')}</div>`; return; }
   if (pass!==pass2) { div.innerHTML=`<div class="alert alert-e">${t('err.passmatch')}</div>`; return; }
-  const users = LS.users();
+  const users = await DB.users();
   if (users.find(u=>u.email===email)){ div.innerHTML=`<div class="alert alert-e">${t('err.emailtaken')}</div>`; return; }
   const hash = await sha256(email+pass);
-  users.push({ email, hash, createdAt:new Date().toISOString() }); LS.saveUsers(users);
+  await DB.upsertUser({ email, hash, created_at:new Date().toISOString() });
   currentUser = { email }; launchApp();
 }
 
@@ -1023,19 +1176,26 @@ function doLogout() {
 // ══════════════════════════════════════════
 //  APP LAUNCH
 // ══════════════════════════════════════════
-function launchApp() {
+async function launchApp() {
   document.getElementById('screen-auth').style.display='none';
   document.getElementById('screen-app').style.display ='block';
   document.getElementById('hdr-email').textContent = currentUser.email;
   document.getElementById('nav-admin').style.display = isAdmin() ? 'inline-block' : 'none';
   applyLang(); rebuildShirtSelects();
-  renderClubs(); loadProfile(); showPage('home');
+  await seedClubsIfEmpty();
+  await renderClubs(); await loadProfile(); showPage('home');
+}
+
+async function seedClubsIfEmpty() {
+  const [clubs, kitItems] = await Promise.all([DB.clubs(), DB.kitItems()]);
+  if (!clubs.length)    for (const c of DEFAULT_CLUBS)    await DB.upsertClub(c);
+  if (!kitItems.length) for (const k of DEFAULT_KIT_ITEMS) await DB.insertKitItem(k);
 }
 
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGES = ['home','profile','admin'];
+const PAGES = ['home','kit','profile','admin'];
 function showPage(name) {
   PAGES.forEach(p => document.getElementById('page-'+p).classList.toggle('active', p===name));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
@@ -1045,19 +1205,20 @@ function showPage(name) {
     if (isAdmin()) {
       document.getElementById('admin-lock').style.display='none';
       document.getElementById('admin-dash').style.display='block';
-      renderAdminDashboard();
+      renderAdminDashboard(); // async fire-and-forget
     } else {
       document.getElementById('admin-lock').style.display='block';
       document.getElementById('admin-dash').style.display='none';
     }
   }
+  if (name==='kit') renderKitPage(); // async fire-and-forget
 }
 
 // ══════════════════════════════════════════
 //  HOME
 // ══════════════════════════════════════════
-function renderClubs() {
-  const clubs = LS.clubs();
+async function renderClubs() {
+  const clubs = await DB.clubs();
   const el = document.getElementById('clubs-list');
   if (!clubs.length) { el.innerHTML=`<p style="color:var(--muted);font-size:.86em">${currentLang==='en'?'No clubs confirmed yet.':'Nenhum clube confirmado ainda.'}</p>`; return; }
   el.innerHTML = clubs.map(c => {
@@ -1071,8 +1232,8 @@ function renderClubs() {
 // ══════════════════════════════════════════
 //  PROFILE – LOAD
 // ══════════════════════════════════════════
-function loadProfile() {
-  const reg = LS.getReg(currentUser.email);
+async function loadProfile() {
+  const reg = await DB.getReg(currentUser.email);
   const banner = document.getElementById('profile-status-banner');
   if (!reg) {
     banner.innerHTML=`<div class="status-banner sb-incomplete">${t('status.empty')}</div>`;
@@ -1153,7 +1314,7 @@ function updateKitUI() {
 // ══════════════════════════════════════════
 //  PROFILE – SAVE
 // ══════════════════════════════════════════
-function saveProfile() {
+async function saveProfile() {
   const v=id=>document.getElementById(id)?.value?.trim()||'';
   const div=document.getElementById('profile-alert');
   const name=v('p-name'), rank=v('p-rank'), club=v('p-club'), chapter=v('p-chapter'), country=v('p-country')||'Brasil';
@@ -1182,7 +1343,7 @@ function saveProfile() {
   div.innerHTML='';
   const kitExtra=(hasCompanion&&compShirt?COMP_SHIRT:0)+(hasCompanion&&compCup?COMP_CUP:0);
   const kitTotal=kitQty*KIT_PRICE+kitExtra;
-  const existing=LS.getReg(currentUser.email);
+  const existing = await DB.getReg(currentUser.email);
   const reg={ email:currentUser.email, name, rank, club, chapter, country, phone, passport, shirtSize,
     flightDate, flightNum, arrivalMethod, arrivalDate, arrivalTime, departDate, departNum,
     companion, compShirt:hasCompanion&&compShirt, compShirtSize, compCup:hasCompanion&&compCup,
@@ -1190,7 +1351,7 @@ function saveProfile() {
     status:existing?.status||'pending',
     createdAt:existing?.createdAt||new Date().toISOString(),
     updatedAt:new Date().toISOString() };
-  LS.upsertReg(reg); loadProfile();
+  await DB.upsertReg(reg); await loadProfile();
   const meth={train:t('arr.train'),plane:t('arr.plane'),car:t('arr.car'),moto:t('arr.moto'),balloon:t('arr.balloon')};
   document.getElementById('saved-summary').innerHTML=`
     <div class="sum-item"><span>${t('f.fullname').replace(' *','')}:</span><span>${name} (${rank})</span></div>
@@ -1203,7 +1364,7 @@ function saveProfile() {
     ${compShirt?`<div class="sum-item"><span>${t('kit.femsize').replace(' *','')}:</span><span>${compShirtSize}</span></div>`:''}
     <div class="sum-item"><span>Kits:</span><span>${kitQty}×</span></div>
     <div class="sum-total"><span>Total:</span><span>R$ ${kitTotal},00</span></div>`;
-  document.getElementById('modal-pix').textContent=LS.pix();
+  document.getElementById('modal-pix').textContent=await DB.pix();
   openModal('saved-modal');
 }
 
@@ -1223,10 +1384,10 @@ function unlockAdmin() {
 // ══════════════════════════════════════════
 //  ADMIN – DASHBOARD
 // ══════════════════════════════════════════
-function renderAdminDashboard() { renderStats(); renderAdminTable(); }
+async function renderAdminDashboard() { await renderStats(); await renderAdminTable(); }
 
-function renderStats() {
-  const all=LS.regs(), paid=all.filter(r=>r.status==='paid');
+async function renderStats() {
+  const all=await DB.regs(), paid=all.filter(r=>r.status==='paid');
   const kits=all.reduce((s,r)=>s+(r.kitQty||0),0);
   const tot=all.reduce((s,r)=>s+(r.kitTotal||0),0);
   const recv=paid.reduce((s,r)=>s+(r.kitTotal||0),0);
@@ -1240,11 +1401,12 @@ function renderStats() {
     <div class="stat-card"><div class="stat-num" style="font-size:1.1em">R$&nbsp;${recv}</div><div class="stat-lbl">Recebido</div></div>`;
 }
 
-function getFilteredRegs() {
+async function getFilteredRegs() {
   const search  = (document.getElementById('a-search')?.value||'').toLowerCase();
   const statusF = document.getElementById('a-status')?.value||'';
   const chapF   = document.getElementById('a-chapter')?.value||'';
-  return LS.regs().filter(r => {
+  const all = await DB.regs();
+  return all.filter(r => {
     const ms=!search||(r.email||'').toLowerCase().includes(search)||
       (r.name||'').toLowerCase().includes(search)||(r.club||'').toLowerCase().includes(search)||
       (r.chapter||'').toLowerCase().includes(search);
@@ -1254,9 +1416,9 @@ function getFilteredRegs() {
   });
 }
 
-function renderAdminTable() {
+async function renderAdminTable() {
   const meth={train:'🚂',plane:'✈️',car:'🚗',moto:'🏍️',balloon:'🎈'};
-  const filtered=getFilteredRegs();
+  const filtered=await getFilteredRegs();
   document.getElementById('reg-count').textContent=filtered.length;
   const tbody=document.getElementById('reg-tbody');
   if (!filtered.length){ tbody.innerHTML='<tr><td colspan="18" style="text-align:center;color:#555;padding:26px">Nenhuma inscrição encontrada</td></tr>'; return; }
@@ -1290,26 +1452,27 @@ function renderAdminTable() {
   }).join('');
 }
 
-function setRegStatus(email,status) {
-  const all=LS.regs(); const i=all.findIndex(r=>r.email===email);
-  if(i>=0){ all[i].status=status; LS.saveRegs(all); renderAdminDashboard(); }
+async function setRegStatus(email,status) {
+  const reg = await DB.getReg(email);
+  if (reg) { reg.status=status; await DB.upsertReg(reg); await renderAdminDashboard(); }
 }
-function deleteReg(email) {
+async function deleteReg(email) {
   if(!confirm(`Excluir inscrição de ${email}?`)) return;
-  LS.saveRegs(LS.regs().filter(r=>r.email!==email)); renderAdminDashboard();
+  await sb.from('registrations').delete().eq('email',email);
+  await renderAdminDashboard();
 }
 
 // ══════════════════════════════════════════
 //  EXPORT CSV
 // ══════════════════════════════════════════
-function exportCSV() {
+async function exportCSV() {
   const meth={train:'Train/Trem',plane:'Plane/Avião',car:'Car/Carro',moto:'Moto',balloon:'Balloon/Balão'};
   const heads=['E-mail','Nome/Name','Graduação/Rank','Moto Clube/Moto Club','Chapter','País/Country',
     'Tel','Passaporte/Passport','Tam./Size','Data Voo/Flight Date','Nº Voo/Flight No.',
     'Chegada MCH/Munich Arrival','Hora/Time','Meio/Mode','Voo Retorno/Return Flight',
     'Acomp./Companion','Nome Acomp.','Clube Acomp.','Tel Acomp.','Pass. Acomp.',
     'Cam.Fem.','Tam.Fem.','Copo/Cup','Kits','Extras R$','Total R$','Status','Data Inscrição','Obs.'];
-  const rows=LS.regs().map(r=>[
+  const rows=(await DB.regs()).map(r=>[
     r.email,r.name||'',r.rank||'',r.club||'',r.chapter||'',r.country||'',r.phone||'',r.passport||'',r.shirtSize||'',
     r.flightDate||'',r.flightNum||'',r.arrivalDate||'',r.arrivalTime||'',
     meth[r.arrivalMethod]||r.arrivalMethod||'',`${r.departDate||''}${r.departNum?' '+r.departNum:''}`,
@@ -1331,12 +1494,12 @@ function exportCSV() {
 // ══════════════════════════════════════════
 //  GENERATE PDF
 // ══════════════════════════════════════════
-function generatePDF() {
+async function generatePDF() {
   if (!window.jspdf) { alert('PDF library not loaded. Check internet connection.'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
 
-  const filtered = getFilteredRegs();
+  const filtered = await getFilteredRegs();
   const search   = document.getElementById('a-search')?.value||'';
   const statusF  = document.getElementById('a-status')?.value||'';
   const chapF    = document.getElementById('a-chapter')?.value||'';
@@ -1366,7 +1529,7 @@ function generatePDF() {
   }
 
   // ── Stats row
-  const all    = LS.regs();
+  const all    = filtered;
   const paid   = filtered.filter(r=>r.status==='paid');
   const kits   = filtered.reduce((s,r)=>s+(r.kitQty||0),0);
   const totVal = filtered.reduce((s,r)=>s+(r.kitTotal||0),0);
@@ -1437,8 +1600,8 @@ function generatePDF() {
 // ══════════════════════════════════════════
 //  PIX
 // ══════════════════════════════════════════
-function openPixModal() { document.getElementById('pix-input').value=LS.pix(); openModal('pix-modal'); }
-function savePix() { const v=document.getElementById('pix-input').value.trim(); if(v) LS.savePix(v); closeModal('pix-modal'); }
+async function openPixModal() { document.getElementById('pix-input').value=await DB.pix(); openModal('pix-modal'); }
+async function savePix() { const v=document.getElementById('pix-input').value.trim(); if(v) await DB.setPix(v); closeModal('pix-modal'); }
 function copyPix() {
   const el=document.getElementById('modal-pix');
   navigator.clipboard.writeText(el.textContent).then(()=>{ const o=el.textContent; el.textContent='✓ Copiado / Copied!'; setTimeout(()=>el.textContent=o,1500); });
@@ -1447,7 +1610,7 @@ function copyPix() {
 // ══════════════════════════════════════════
 //  CLUBS
 // ══════════════════════════════════════════
-function openClubsModal() { brasaoDataUrl=''; resetBrasao(); renderClubsMgmt(); openModal('clubs-modal'); }
+async function openClubsModal() { brasaoDataUrl=''; resetBrasao(); await renderClubsMgmt(); openModal('clubs-modal'); }
 function resetBrasao() { document.getElementById('brasao-file').value=''; document.getElementById('brasao-preview').style.display='none'; brasaoDataUrl=''; }
 function previewBrasao(input) {
   if (!input.files||!input.files[0]) return;
@@ -1455,26 +1618,221 @@ function previewBrasao(input) {
   reader.onload=e=>{ brasaoDataUrl=e.target.result; const p=document.getElementById('brasao-preview'); p.src=brasaoDataUrl; p.style.display='block'; };
   reader.readAsDataURL(input.files[0]);
 }
-function addClub() {
+async function addClub() {
   const name=document.getElementById('club-name-in').value.trim();
   const country=document.getElementById('club-country-in').value.trim();
   if (!name) return;
-  const clubs=LS.clubs(); clubs.push({ brasao:brasaoDataUrl, flag:'🏍️', name, country });
-  LS.saveClubs(clubs);
+  await DB.upsertClub({ brasao:brasaoDataUrl, flag:'🏍️', name, country });
   document.getElementById('club-name-in').value=''; document.getElementById('club-country-in').value='';
-  resetBrasao(); renderClubsMgmt(); renderClubs();
+  resetBrasao(); await renderClubsMgmt(); await renderClubs();
 }
-function removeClub(i) { const c=LS.clubs(); c.splice(i,1); LS.saveClubs(c); renderClubsMgmt(); renderClubs(); }
-function renderClubsMgmt() {
-  const clubs=LS.clubs(), el=document.getElementById('clubs-mgmt-list');
+async function removeClub(id) { await DB.deleteClub(id); await renderClubsMgmt(); await renderClubs(); }
+async function renderClubsMgmt() {
+  const clubs=await DB.clubs(), el=document.getElementById('clubs-mgmt-list');
   if (!clubs.length) { el.innerHTML='<p style="color:var(--muted);padding:10px;font-size:.84em">Nenhum clube / No clubs.</p>'; return; }
-  el.innerHTML=clubs.map((c,i)=>{
+  el.innerHTML=clubs.map(c=>{
     const img=c.brasao?`<img src="${c.brasao}" style="width:32px;height:32px;object-fit:contain;border-radius:3px;border:1px solid #333;background:#000">`:`<span style="font-size:1.3em">${c.flag||'🏍️'}</span>`;
     return `<div style="display:flex;align-items:center;gap:9px;padding:7px 5px;border-bottom:1px solid var(--border)">
       ${img}<span style="flex:1;font-size:.87em">${c.name}</span>
-      <span style="font-size:.76em;color:var(--muted);min-width:60px">${c.country}</span>
-      <button class="btn btn-danger btn-sm" onclick="removeClub(${i})">✕</button></div>`;
+      <span style="font-size:.76em;color:var(--muted);min-width:60px">${c.country||''}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeClub(${c.id})">✕</button></div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════
+//  KIT PAGE
+// ══════════════════════════════════════════
+let kitItemsCache = [];
+
+async function renderKitPage() {
+  kitItemsCache = await DB.kitItems();
+  const kitOnly = kitItemsCache.filter(k => k.category === 'kit' && k.active);
+  const total   = kitOnly.reduce((s,k) => s + (k.price||0), 0);
+  document.getElementById('kit-page-total').textContent = `R$ ${total},00`;
+  const grid = document.getElementById('kit-items-grid');
+  if (!kitOnly.length) { grid.innerHTML='<p style="color:var(--muted)">Nenhum item configurado.</p>'; return; }
+  grid.innerHTML = kitOnly.map(k => {
+    const img = k.image
+      ? `<img class="kit-item-img" src="${k.image}" alt="${k.name}">`
+      : `<div class="kit-item-img-ph">🎒</div>`;
+    return `<div class="kit-item-card">
+      ${img}
+      <div class="kit-item-body">
+        <div class="kit-item-name">${k.name}</div>
+        <div class="kit-item-desc">${k.description||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ADMIN KIT MANAGEMENT ──
+function toggleKitAdmin() {
+  const sec = document.getElementById('kit-admin-section');
+  const btn = document.getElementById('btn-kit-admin');
+  const show = !sec.classList.contains('show');
+  sec.classList.toggle('show', show);
+  btn.style.background = show ? 'rgba(201,168,76,.15)' : '';
+  btn.style.borderColor = show ? 'var(--gold)' : '';
+  if (show) renderKitAdminList();
+}
+
+let kitEditImg = {};
+
+async function renderKitAdminList() {
+  const items = await DB.kitItems();
+  kitItemsCache = items;
+  const el = document.getElementById('kit-admin-list');
+  if (!items.length) { el.innerHTML='<p style="color:var(--muted);padding:10px">Nenhum item.</p>'; return; }
+  el.innerHTML = items.map(k => {
+    const thumb = k.image
+      ? `<img class="kit-admin-thumb" src="${k.image}" alt="${k.name}">`
+      : `<div class="kit-admin-thumb-ph">🎒</div>`;
+    const catLabel = k.category==='kit' ? '🎽 Kit Principal' : '➕ Extra Acompanhante';
+    return `<div class="kit-admin-item" id="kai-${k.id}">
+      <div class="kit-admin-item-header" onclick="toggleKitEdit(${k.id})">
+        ${thumb}
+        <div class="kit-admin-item-info">
+          <div class="kit-admin-item-name">${k.name}</div>
+          <div class="kit-admin-item-meta">${catLabel} · R$ ${k.price||0} · ${k.active?'✅ Ativo':'⛔ Inativo'}</div>
+        </div>
+        <span style="color:var(--muted);font-size:.8em">▼</span>
+      </div>
+      <div class="kit-admin-edit" id="kaie-${k.id}">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="kaif-name-${k.id}" value="${k.name.replace(/"/g,'&quot;')}">
+          </div>
+          <div class="form-group">
+            <label>Preço (R$)</label>
+            <input type="number" id="kaif-price-${k.id}" value="${k.price||0}" min="0">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="kaif-cat-${k.id}">
+              <option value="kit"  ${k.category==='kit'  ?'selected':''}>Kit Principal</option>
+              <option value="extra"${k.category==='extra'?'selected':''}>Extra Acompanhante</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ordem</label>
+            <input type="number" id="kaif-order-${k.id}" value="${k.sort_order||0}" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="kaif-desc-${k.id}" rows="2">${k.description||''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Imagem</label>
+          <input type="file" accept="image/*" onchange="loadKitEditImg(this,${k.id})"
+            style="background:var(--input);border:1px solid #3a3a3a;border-radius:5px;padding:7px;width:100%;color:var(--text)">
+          ${k.image?`<img src="${k.image}" style="display:block;max-height:80px;margin-top:7px;border-radius:4px;border:1px solid var(--border)" id="kaif-imgprev-${k.id}">`
+            :`<span id="kaif-imgprev-${k.id}" style="display:none"></span>`}
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="kaif-active-${k.id}" ${k.active?'checked':''}
+              style="width:16px;height:16px;accent-color:var(--gold)"> Ativo (exibir na página Kit)
+          </label>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-primary btn-sm" onclick="saveKitItem(${k.id})">💾 Salvar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteKitItemById(${k.id})">✕ Excluir</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleKitEdit(id) {
+  const el = document.getElementById('kaie-'+id);
+  el.classList.toggle('open');
+}
+
+function loadKitEditImg(input, id) {
+  if (!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    kitEditImg[id] = e.target.result;
+    const prev = document.getElementById('kaif-imgprev-'+id);
+    if (prev) { prev.src = e.target.result; prev.style.display='block'; }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function saveKitItem(id) {
+  const item = {
+    id,
+    name:       document.getElementById(`kaif-name-${id}`).value.trim(),
+    price:      parseInt(document.getElementById(`kaif-price-${id}`).value)||0,
+    category:   document.getElementById(`kaif-cat-${id}`).value,
+    sort_order: parseInt(document.getElementById(`kaif-order-${id}`).value)||0,
+    description:document.getElementById(`kaif-desc-${id}`).value.trim(),
+    active:     document.getElementById(`kaif-active-${id}`).checked,
+    image:      kitEditImg[id] !== undefined ? kitEditImg[id]
+                : (kitItemsCache.find(k=>k.id===id)?.image || ''),
+  };
+  await DB.upsertKitItem(item);
+  delete kitEditImg[id];
+  await renderKitAdminList();
+  updateKitPricesFromDB();
+}
+
+async function deleteKitItemById(id) {
+  if (!confirm('Excluir este item do kit?')) return;
+  await DB.deleteKitItem(id);
+  await renderKitAdminList();
+  updateKitPricesFromDB();
+}
+
+// New item form
+let kitNewImg = '';
+function previewKitImg(input) {
+  if (!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    kitNewImg = e.target.result;
+    const p = document.getElementById('ki-img-preview');
+    p.src = kitNewImg; p.style.display='block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function addKitItem() {
+  const name = document.getElementById('ki-name').value.trim();
+  if (!name) return;
+  await DB.insertKitItem({
+    name,
+    description: document.getElementById('ki-desc').value.trim(),
+    price:       parseInt(document.getElementById('ki-price').value)||0,
+    category:    document.getElementById('ki-category').value,
+    sort_order:  parseInt(document.getElementById('ki-order').value)||0,
+    image:       kitNewImg,
+    active:      true,
+  });
+  document.getElementById('ki-name').value='';
+  document.getElementById('ki-desc').value='';
+  document.getElementById('ki-price').value='';
+  document.getElementById('ki-order').value='';
+  document.getElementById('ki-img').value='';
+  document.getElementById('ki-img-preview').style.display='none';
+  kitNewImg='';
+  await renderKitAdminList();
+  updateKitPricesFromDB();
+}
+
+// Sync KIT_PRICE global from DB so registration totals stay correct
+async function updateKitPricesFromDB() {
+  const items = await DB.kitItems();
+  const kit   = items.filter(k=>k.category==='kit'&&k.active);
+  const extra = items.filter(k=>k.category==='extra'&&k.active);
+  window.KIT_PRICE  = kit.reduce((s,k)=>s+(k.price||0),0) || 72;
+  window.COMP_SHIRT = extra.find(k=>k.name.toLowerCase().includes('camis'))?.price || 44;
+  window.COMP_CUP   = extra.find(k=>k.name.toLowerCase().includes('cop'))?.price || 12;
+  updateKitUI();
 }
 
 // ══════════════════════════════════════════
