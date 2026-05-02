@@ -356,7 +356,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           <p>Law Enforcement Motorcycle Clubs Coalition</p>
           <div class="event-grid">
             <div class="ev-item"><div class="ev-icon">📅</div>
-              <div class="ev-label" data-i18n="ev.date"></div><div class="ev-val">26 - 28 Junho</div></div>
+              <div class="ev-label" data-i18n="ev.date"></div><div class="ev-val" data-i18n="ev.date.val"></div></div>
             <div class="ev-item"><div class="ev-icon">🇩🇪</div>
               <div class="ev-label" data-i18n="ev.location"></div><div class="ev-val">Munich, Germany</div></div>
             <div class="ev-item"><div class="ev-icon">🏍️</div>
@@ -683,8 +683,19 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
                 </div>
               </div>
               <div class="form-group">
-                <label>Descrição</label>
-                <textarea id="ki-desc" rows="2" placeholder="Descrição do item para exibição na página Kit"></textarea>
+                <label>Descrição (PT)</label>
+                <textarea id="ki-desc" rows="2" placeholder="Descrição em português"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nome (EN)</label>
+                  <input type="text" id="ki-name-en" placeholder="e.g. Long Sleeve T-Shirt">
+                </div>
+                <div class="form-group" style="display:none"></div>
+              </div>
+              <div class="form-group">
+                <label>Descrição (EN)</label>
+                <textarea id="ki-desc-en" rows="2" placeholder="Description in English"></textarea>
               </div>
               <div class="form-group">
                 <label>Imagem</label>
@@ -933,12 +944,12 @@ const DB = {
 };
 
 const DEFAULT_KIT_ITEMS = [
-  { name:'Camiseta Manga Longa',    description:'Camiseta oficial do encontro, manga longa, cor preta com estampa exclusiva do 8th International Meeting Munich 2026.', image:'', price:44, category:'kit',   sort_order:1, active:true },
-  { name:'Copo com Tirante',        description:'Copo oficial com tirante de couro sintético para uso durante o evento.', image:'', price:12, category:'kit',   sort_order:2, active:true },
-  { name:'Ficha de Poler',          description:'Ficha personalizada do 8th International Meeting Munich 2026 para uso na mesa de poler.', image:'', price:4,  category:'kit',   sort_order:3, active:true },
-  { name:'Mochila',                 description:'Mochila oficial do evento com logo bordado e compartimentos práticos para o dia do encontro.', image:'', price:12, category:'kit',   sort_order:4, active:true },
-  { name:'Camiseta Feminina',       description:'Camiseta oficial feminina manga longa, disponível para acompanhantes.', image:'', price:44, category:'extra',  sort_order:5, active:true },
-  { name:'Copo Acompanhante',       description:'Copo oficial com tirante para acompanhante.', image:'', price:12, category:'extra',  sort_order:6, active:true },
+  { name:'Camiseta Manga Longa',    name_en:'Long Sleeve T-Shirt',    description:'Camiseta oficial do encontro, manga longa, cor preta com estampa exclusiva do 8th International Meeting Munich 2026.', description_en:'Official event long sleeve t-shirt, black with exclusive print from the 8th International Meeting Munich 2026.', image:'', price:44, category:'kit',   sort_order:1, active:true },
+  { name:'Copo com Tirante',        name_en:'Cup with Strap',         description:'Copo oficial com tirante de couro sintético para uso durante o evento.', description_en:'Official cup with synthetic leather strap for use during the event.', image:'', price:12, category:'kit',   sort_order:2, active:true },
+  { name:'Ficha de Poler',          name_en:'Poker Chip',             description:'Ficha personalizada do 8th International Meeting Munich 2026 para uso na mesa de poler.', description_en:'Custom poker chip for the 8th International Meeting Munich 2026.', image:'', price:4,  category:'kit',   sort_order:3, active:true },
+  { name:'Mochila',                 name_en:'Backpack',               description:'Mochila oficial do evento com logo bordado e compartimentos práticos para o dia do encontro.', description_en:'Official event backpack with embroidered logo and practical compartments.', image:'', price:12, category:'kit',   sort_order:4, active:true },
+  { name:'Camiseta Feminina',       name_en:"Women's T-Shirt",        description:'Camiseta oficial feminina manga longa, disponível para acompanhantes.', description_en:"Official women's long sleeve t-shirt, available for companions.", image:'', price:44, category:'extra',  sort_order:5, active:true },
+  { name:'Copo Acompanhante',       name_en:'Companion Cup',          description:'Copo oficial com tirante para acompanhante.', description_en:'Official cup with strap for companion.', image:'', price:12, category:'extra',  sort_order:6, active:true },
 ];
 
 // ══════════════════════════════════════════
@@ -960,7 +971,7 @@ const TRANS = {
     'kit.page.sub':'Todos os itens incluídos no kit oficial do 8th International Meeting · Munich · Germany.',
     'kit.page.total.label':'Valor total do kit por participante',
     'kit.page.total.note':'Inclui todos os itens acima',
-    'ev.date':'Data', 'ev.location':'Local', 'ev.event':'Evento',
+    'ev.date':'Data', 'ev.date.val':'26 - 28 Junho', 'ev.location':'Local', 'ev.event':'Evento',
     'ev.intl':'Internacional', 'ev.kit':'Kit / pessoa',
     'home.clubs':'Moto Clubes Confirmados',
     'home.cta.text':'Ainda não preencheu sua inscrição?',
@@ -1034,7 +1045,7 @@ const TRANS = {
     'kit.page.sub':'All items included in the official kit for the 8th International Meeting · Munich · Germany.',
     'kit.page.total.label':'Total kit value per participant',
     'kit.page.total.note':'Includes all items above',
-    'ev.date':'Date', 'ev.location':'Location', 'ev.event':'Event',
+    'ev.date':'Date', 'ev.date.val':'26 - 28 June', 'ev.location':'Location', 'ev.event':'Event',
     'ev.intl':'International', 'ev.kit':'Kit / person',
     'home.clubs':'Confirmed Motorcycle Clubs',
     'home.cta.text':"Haven't filled in your registration yet?",
@@ -1160,6 +1171,8 @@ async function toggleLang() {
   if (currentUser) {
     await renderClubs();
     await loadProfile();
+    const kitPage = document.getElementById('page-kit');
+    if (kitPage && kitPage.classList.contains('active')) await renderKitPage();
     if (adminUnlocked || (currentUser && ADMIN_EMAILS.includes(currentUser.email))) {
       const dash = document.getElementById('admin-dash');
       if (dash && dash.style.display !== 'none') await renderAdminDashboard();
@@ -1769,14 +1782,17 @@ async function renderKitPage() {
   const grid = document.getElementById('kit-items-grid');
   if (!kitOnly.length) { grid.innerHTML='<p style="color:var(--muted)">Nenhum item configurado.</p>'; return; }
   grid.innerHTML = kitOnly.map(k => {
+    const isEn = currentLang === 'en';
+    const name = (isEn && k.name_en) ? k.name_en : k.name;
+    const desc = (isEn && k.description_en) ? k.description_en : (k.description||'');
     const img = k.image
-      ? `<img class="kit-item-img" src="${k.image}" alt="${k.name}">`
+      ? `<img class="kit-item-img" src="${k.image}" alt="${name}">`
       : `<div class="kit-item-img-ph">🎒</div>`;
     return `<div class="kit-item-card">
       ${img}
       <div class="kit-item-body">
-        <div class="kit-item-name">${k.name}</div>
-        <div class="kit-item-desc">${k.description||''}</div>
+        <div class="kit-item-name">${name}</div>
+        <div class="kit-item-desc">${desc}</div>
       </div>
     </div>`;
   }).join('');
@@ -1839,8 +1855,19 @@ async function renderKitAdminList() {
           </div>
         </div>
         <div class="form-group">
-          <label>Descrição</label>
+          <label>Descrição (PT)</label>
           <textarea id="kaif-desc-${k.id}" rows="2">${k.description||''}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome (EN)</label>
+            <input type="text" id="kaif-name-en-${k.id}" value="${(k.name_en||'').replace(/"/g,'&quot;')}">
+          </div>
+          <div class="form-group" style="display:none"></div>
+        </div>
+        <div class="form-group">
+          <label>Descrição (EN)</label>
+          <textarea id="kaif-desc-en-${k.id}" rows="2">${k.description_en||''}</textarea>
         </div>
         <div class="form-group">
           <label>Imagem</label>
@@ -1883,14 +1910,16 @@ function loadKitEditImg(input, id) {
 async function saveKitItem(id) {
   const item = {
     id,
-    name:       document.getElementById(`kaif-name-${id}`).value.trim(),
-    price:      parseInt(document.getElementById(`kaif-price-${id}`).value)||0,
-    category:   document.getElementById(`kaif-cat-${id}`).value,
-    sort_order: parseInt(document.getElementById(`kaif-order-${id}`).value)||0,
-    description:document.getElementById(`kaif-desc-${id}`).value.trim(),
-    active:     document.getElementById(`kaif-active-${id}`).checked,
-    image:      kitEditImg[id] !== undefined ? kitEditImg[id]
-                : (kitItemsCache.find(k=>k.id===id)?.image || ''),
+    name:           document.getElementById(`kaif-name-${id}`).value.trim(),
+    name_en:        document.getElementById(`kaif-name-en-${id}`)?.value.trim()||'',
+    price:          parseInt(document.getElementById(`kaif-price-${id}`).value)||0,
+    category:       document.getElementById(`kaif-cat-${id}`).value,
+    sort_order:     parseInt(document.getElementById(`kaif-order-${id}`).value)||0,
+    description:    document.getElementById(`kaif-desc-${id}`).value.trim(),
+    description_en: document.getElementById(`kaif-desc-en-${id}`)?.value.trim()||'',
+    active:         document.getElementById(`kaif-active-${id}`).checked,
+    image:          kitEditImg[id] !== undefined ? kitEditImg[id]
+                    : (kitItemsCache.find(k=>k.id===id)?.image || ''),
   };
   await DB.upsertKitItem(item);
   delete kitEditImg[id];
@@ -1923,18 +1952,18 @@ async function addKitItem() {
   if (!name) return;
   await DB.insertKitItem({
     name,
-    description: document.getElementById('ki-desc').value.trim(),
-    price:       parseInt(document.getElementById('ki-price').value)||0,
-    category:    document.getElementById('ki-category').value,
-    sort_order:  parseInt(document.getElementById('ki-order').value)||0,
-    image:       kitNewImg,
-    active:      true,
+    name_en:        document.getElementById('ki-name-en').value.trim(),
+    description:    document.getElementById('ki-desc').value.trim(),
+    description_en: document.getElementById('ki-desc-en').value.trim(),
+    price:          parseInt(document.getElementById('ki-price').value)||0,
+    category:       document.getElementById('ki-category').value,
+    sort_order:     parseInt(document.getElementById('ki-order').value)||0,
+    image:          kitNewImg,
+    active:         true,
   });
-  document.getElementById('ki-name').value='';
-  document.getElementById('ki-desc').value='';
-  document.getElementById('ki-price').value='';
-  document.getElementById('ki-order').value='';
-  document.getElementById('ki-img').value='';
+  ['ki-name','ki-name-en','ki-desc','ki-desc-en','ki-price','ki-order','ki-img'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
   document.getElementById('ki-img-preview').style.display='none';
   kitNewImg='';
   await renderKitAdminList();
