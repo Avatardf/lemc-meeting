@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEMC · 8th International Meeting · Munich 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --gold:#C9A84C; --gold-light:#F0C860; --red:#CC0000;
+  --black:#0a0a0a; --dark:#141414; --card:#1a1a1a;
+  --text:#e0e0e0; --muted:#888; --border:#2e2e2e;
+  --input:#1e1e1e; --success:#00cc44; --err:#ff5555;
+}
+body { background:var(--black); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; min-height:100vh; }
+.flag { height:5px; background:linear-gradient(to right,#000 33.3%,#DD0000 33.3%,#DD0000 66.6%,#FFCE00 66.6%); }
+
+/* ── LANG TOGGLE ── */
+.lang-btn { background:transparent; border:1px solid #444; color:var(--muted);
+  padding:4px 10px; border-radius:4px; cursor:pointer; font-size:.78em;
+  letter-spacing:1px; transition:all .2s; }
+.lang-btn:hover { border-color:var(--gold); color:var(--gold); }
+.lang-auth { position:absolute; top:14px; right:14px; }
+
+/* ── AUTH ── */
+#screen-auth { min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:20px 16px; position:relative;
+  background:radial-gradient(ellipse at 50% 0%,#1a1200 0%,#0a0a0a 60%); }
+.auth-poster { width:180px; margin-bottom:16px; filter:drop-shadow(0 4px 20px rgba(201,168,76,.35)); }
+.auth-logo { text-align:center; margin-bottom:24px; }
+.auth-logo h1 { font-size:clamp(2em,8vw,3em); color:var(--gold);
+  letter-spacing:8px; text-shadow:0 0 30px rgba(201,168,76,.4); }
+.auth-logo .sub1 { color:var(--text); font-size:.9em; letter-spacing:3px; margin-top:4px; }
+.auth-logo .sub2 { color:var(--gold); font-size:.78em; letter-spacing:2px; margin-top:2px; }
+.auth-box { background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:28px; width:100%; max-width:400px; box-shadow:0 10px 50px rgba(0,0,0,.6); }
+.auth-tabs { display:flex; margin-bottom:22px; border-bottom:1px solid var(--border); }
+.auth-tab { flex:1; background:none; border:none; color:var(--muted); padding:10px;
+  font-size:.86em; text-transform:uppercase; letter-spacing:1px; cursor:pointer;
+  border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .2s; }
+.auth-tab.active { color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
+
+/* ── APP ── */
+#screen-app { display:none; }
+header { background:linear-gradient(160deg,#0d0d0d 0%,#1a1500 100%);
+  border-bottom:2px solid var(--gold); padding:13px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.hdr-brand { display:flex; align-items:center; gap:12px; }
+.hdr-brand img { height:46px; filter:drop-shadow(0 2px 6px rgba(201,168,76,.3)); }
+.hdr-brand h1 { font-size:1.4em; color:var(--gold); letter-spacing:5px; text-transform:uppercase; }
+.hdr-brand p { color:var(--muted); font-size:.73em; letter-spacing:2px; margin-top:2px; }
+.hdr-user { font-size:.82em; color:var(--muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.hdr-user .em { color:var(--gold); }
+nav { background:var(--dark); display:flex; justify-content:center;
+  gap:4px; padding:9px 14px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+nav button { background:transparent; color:var(--muted); border:1px solid #3a3a3a;
+  padding:7px 20px; cursor:pointer; border-radius:4px; font-size:.85em;
+  text-transform:uppercase; letter-spacing:1px; transition:all .2s; }
+nav button:hover { color:var(--gold); border-color:var(--gold); }
+nav button.active { background:var(--gold); color:var(--black); border-color:var(--gold); font-weight:700; }
+main { max-width:980px; margin:26px auto; padding:0 15px; }
+.page { display:none; } .page.active { display:block; }
+
+/* ── CARD ── */
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px 22px; margin-bottom:18px; }
+.card-title { color:var(--gold); font-size:.84em; text-transform:uppercase;
+  letter-spacing:2px; margin-bottom:15px; padding-bottom:9px; border-bottom:1px solid var(--border); }
+
+/* ── FORM ── */
+.form-row   { display:grid; grid-template-columns:1fr 1fr;   gap:13px; }
+.form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px; }
+@media(max-width:620px){ .form-row,.form-row-3{ grid-template-columns:1fr; } }
+.form-group { margin-bottom:13px; }
+.form-group label { display:block; color:var(--gold); font-size:.73em;
+  text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
+.form-group input,.form-group select,.form-group textarea {
+  width:100%; background:var(--input); border:1px solid #3a3a3a;
+  color:var(--text); padding:9px 11px; border-radius:5px; font-size:.95em; transition:border-color .2s; }
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus {
+  outline:none; border-color:var(--gold); background:#201f12; }
+.form-group select option { background:var(--input); }
+
+/* ── RADIO ── */
+.radio-group { display:flex; gap:8px; flex-wrap:wrap; }
+.radio-opt { flex:1; min-width:110px; display:flex; align-items:center; gap:7px;
+  cursor:pointer; padding:9px 13px; border:1px solid #3a3a3a; border-radius:6px;
+  transition:all .2s; user-select:none; font-size:.9em; }
+.radio-opt:hover { border-color:var(--gold); }
+.radio-opt.sel { border-color:var(--gold); background:rgba(201,168,76,.08); color:var(--gold); }
+.radio-opt input { display:none; }
+.rdot { width:14px; height:14px; border:2px solid #555; border-radius:50%;
+  flex-shrink:0; position:relative; }
+.radio-opt.sel .rdot { border-color:var(--gold); }
+.radio-opt.sel .rdot::after { content:''; position:absolute; inset:2px; background:var(--gold); border-radius:50%; }
+
+/* ── CHECKBOX ── */
+.check-opt { display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+  padding:10px 13px; border:1px solid #3a3a3a; border-radius:6px;
+  transition:all .2s; user-select:none; margin-bottom:8px; }
+.check-opt:hover { border-color:var(--gold); }
+.check-opt.sel { border-color:var(--gold); background:rgba(201,168,76,.06); }
+.check-opt input[type=checkbox] { display:none; }
+.cbox { width:16px; height:16px; border:2px solid #555; border-radius:3px;
+  flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.check-opt.sel .cbox { background:var(--gold); border-color:var(--gold); color:var(--black); font-size:11px; font-weight:700; }
+.check-opt.sel .cbox::after { content:'✓'; }
+.co-label { flex:1; }
+.co-price { color:var(--gold-light); font-weight:700; font-size:.92em; white-space:nowrap; }
+
+/* ── COMPANION BOX ── */
+.companion-box { margin-top:13px; padding:16px; background:#111;
+  border:1px solid #282828; border-radius:6px; display:none; }
+.companion-box.show { display:block; }
+.companion-title { color:var(--gold); font-size:.8em; text-transform:uppercase;
+  letter-spacing:2px; margin-bottom:13px; padding-bottom:7px; border-bottom:1px solid #282828; }
+
+/* ── KIT EXTRAS ── */
+.kit-extras { margin-top:14px; padding:14px; background:#111;
+  border:1px solid #282828; border-radius:6px; display:none; }
+.kit-extras.show { display:block; }
+.extras-title { color:var(--gold); font-size:.78em; text-transform:uppercase;
+  letter-spacing:1.5px; margin-bottom:11px; }
+.extra-size-row { margin-top:6px; margin-left:26px; display:none; }
+.extra-size-row.show { display:block; }
+
+/* ── QTY / KIT ── */
+.kit-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+.qty-ctrl { display:flex; align-items:center; gap:10px; }
+.qty-btn { background:var(--gold); color:var(--black); border:none;
+  width:31px; height:31px; border-radius:50%; font-size:1.2em; font-weight:700;
+  cursor:pointer; line-height:1; transition:opacity .2s; }
+.qty-btn:hover { opacity:.75; }
+.qty-num { font-size:1.4em; font-weight:700; min-width:30px; text-align:center; }
+.kit-total-wrap { text-align:right; }
+.ktl { color:var(--muted); font-size:.76em; }
+.ktv { color:var(--gold); font-size:2em; font-weight:700; line-height:1; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-block; padding:10px 26px; border:none; border-radius:5px;
+  font-size:.88em; font-weight:700; cursor:pointer;
+  text-transform:uppercase; letter-spacing:1.5px; transition:all .25s; }
+.btn-primary   { background:var(--gold); color:var(--black); }
+.btn-primary:hover { background:var(--gold-light); }
+.btn-secondary { background:transparent; color:var(--gold); border:1px solid var(--gold); }
+.btn-secondary:hover { background:rgba(201,168,76,.1); }
+.btn-danger    { background:#8b0000; color:#fff; border:none; }
+.btn-danger:hover { background:var(--red); }
+.btn-sm   { padding:4px 10px; font-size:.73em; }
+.btn-full { width:100%; text-align:center; display:block; }
+
+/* ── ALERTS ── */
+.alert { padding:10px 13px; border-radius:5px; margin:9px 0; font-size:.89em; }
+.alert-s { background:rgba(0,140,0,.14); border:1px solid #008000; color:var(--success); }
+.alert-e { background:rgba(180,0,0,.14); border:1px solid var(--red); color:var(--err); }
+
+/* ── STATUS BANNER ── */
+.status-banner { display:flex; align-items:center; gap:10px;
+  padding:11px 15px; border-radius:6px; margin-bottom:16px; flex-wrap:wrap; }
+.sb-incomplete { background:rgba(201,168,76,.07); border:1px solid rgba(201,168,76,.2); color:var(--gold-light); }
+.sb-pending    { background:rgba(255,165,0,.08);  border:1px solid rgba(255,165,0,.3);  color:orange; }
+.sb-paid       { background:rgba(0,180,0,.08);    border:1px solid rgba(0,180,0,.3);    color:var(--success); }
+
+/* ── HOME ── */
+.event-hero { border:1px solid var(--border); border-top:3px solid var(--gold);
+  border-radius:8px; margin-bottom:18px; overflow:hidden;
+  display:grid; grid-template-columns:1fr auto;
+  background:linear-gradient(135deg,#0d0d00,#1a1500 50%,#0a0a0a); }
+.event-hero-text { padding:26px; }
+.event-hero-text h2 { font-size:clamp(1.2em,3.5vw,1.9em); color:var(--gold);
+  letter-spacing:3px; text-transform:uppercase; margin-bottom:5px; }
+.event-hero-text p { color:var(--muted); font-size:.88em; letter-spacing:2px; }
+.event-hero-img { width:clamp(100px,22vw,200px); display:flex; align-items:stretch; overflow:hidden; }
+.event-hero-img img { width:100%; height:100%; object-fit:cover; object-position:center top; }
+@media(max-width:520px){ .event-hero{ grid-template-columns:1fr; }
+  .event-hero-img{ width:100%; max-height:200px; } }
+.event-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:9px; margin-top:18px; }
+.ev-item { background:rgba(0,0,0,.4); border:1px solid var(--border); border-radius:6px; padding:11px; }
+.ev-icon { font-size:1.3em; margin-bottom:4px; }
+.ev-label { font-size:.68em; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
+.ev-val { font-size:.9em; }
+.clubs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:9px; }
+.club-card { background:#111; border:1px solid var(--border); border-radius:6px;
+  padding:10px 13px; display:flex; align-items:center; gap:10px; }
+.club-brasao { width:38px; height:38px; object-fit:contain; flex-shrink:0; border-radius:3px; }
+.club-brasao-ph { width:38px; height:38px; font-size:1.6em; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; }
+.club-name { font-size:.88em; font-weight:600; }
+.club-country { font-size:.72em; color:var(--muted); margin-top:1px; }
+
+/* ── ADMIN ── */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:11px; margin-bottom:18px; }
+.stat-card { background:#111; border:1px solid var(--border); border-radius:7px; padding:14px; text-align:center; }
+.stat-num { font-size:1.7em; font-weight:700; color:var(--gold); }
+.stat-lbl { font-size:.68em; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+.table-wrap { overflow-x:auto; }
+.reg-table { width:100%; border-collapse:collapse; font-size:.79em; }
+.reg-table th { background:var(--gold); color:var(--black); padding:7px 9px;
+  text-align:left; font-size:.77em; text-transform:uppercase; white-space:nowrap; }
+.reg-table td { padding:8px 9px; border-bottom:1px solid #1e1e1e; vertical-align:middle; white-space:nowrap; }
+.reg-table tr:hover td { background:rgba(201,168,76,.03); }
+.reg-table .actions { display:flex; gap:4px; }
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.73em; font-weight:700; }
+.badge-incomplete { background:rgba(128,128,128,.12); color:#888; border:1px solid #555; }
+.badge-pending    { background:rgba(255,165,0,.12);   color:orange; border:1px solid orange; }
+.badge-paid       { background:rgba(0,200,0,.12);     color:#00cc44; border:1px solid #00a030; }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.82);
+  z-index:999; align-items:center; justify-content:center; padding:16px; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--card); border:2px solid var(--gold); border-radius:10px;
+  padding:24px; max-width:500px; width:100%; max-height:90vh; overflow-y:auto; }
+.modal h3 { color:var(--gold); font-size:1.05em; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+.pix-box { background:#0d0d0d; border:1px solid #333; border-radius:6px; padding:12px; text-align:center; margin:11px 0; }
+.pix-key { font-family:monospace; font-size:.98em; font-weight:700; color:var(--gold);
+  background:#000; padding:6px 13px; border-radius:4px; margin:6px 0;
+  word-break:break-all; cursor:pointer; user-select:all; display:block; }
+.summary-box { background:#101010; border:1px solid var(--gold); border-radius:6px; padding:12px 15px; margin:11px 0; }
+.sum-item { display:flex; justify-content:space-between; padding:3px 0; font-size:.88em; }
+.sum-total { display:flex; justify-content:space-between; padding:7px 0 3px;
+  border-top:1px solid var(--gold); margin-top:5px; font-size:1.05em; font-weight:700; color:var(--gold); }
+
+/* ── CLUBS MODAL ── */
+.clubs-add-grid { display:grid; grid-template-columns:44px 1fr 100px 38px; gap:7px; align-items:end; margin-bottom:12px; }
+.brasao-upload-btn { display:flex; align-items:center; justify-content:center;
+  width:44px; height:36px; border:1px dashed #555; border-radius:5px;
+  cursor:pointer; font-size:1.3em; background:var(--input); transition:border-color .2s; }
+.brasao-upload-btn:hover { border-color:var(--gold); }
+.brasao-preview { width:38px; height:38px; object-fit:contain; border-radius:3px; border:1px solid #444; background:#000; }
+
+footer { text-align:center; padding:16px; color:#333; font-size:.75em;
+  border-top:1px solid #161616; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="flag"></div>
+
+<!-- ══════════════ AUTH ══════════════ -->
+<div id="screen-auth">
+  <button class="lang-btn lang-auth" onclick="toggleLang()">🇬🇧 EN</button>
+  <img src="evento.png" class="auth-poster" alt="" onerror="this.style.display='none'">
+  <div class="auth-logo">
+    <h1>LEMC</h1>
+    <div class="sub1">8th International Meeting</div>
+    <div class="sub2">Munich · Germany · 2026</div>
+  </div>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-signin" onclick="switchAuthTab('login')" data-i18n="auth.signin"></button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')" data-i18n="auth.register"></button>
+    </div>
+    <div id="auth-login">
+      <div class="form-group">
+        <label data-i18n="f.email"></label>
+        <input type="email" id="l-email" data-i18n-ph="f.email.ph" onkeypress="if(event.key==='Enter') doLogin()">
+      </div>
+      <div class="form-group">
+        <label data-i18n="f.password"></label>
+        <input type="password" id="l-pass" placeholder="••••••••" onkeypress="if(event.key==='Enter') doLogin()">
+      </div>
+      <div id="l-alert"></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" data-i18n="auth.signin"></button>
+    </div>
+    <div id="auth-register" style="display:none">
+      <div class="form-group">
+        <label data-i18n="f.email"></label>
+        <input type="email" id="r-email" data-i18n-ph="f.email.ph">
+      </div>
+      <div class="form-group">
+        <label data-i18n="f.passmin"></label>
+        <input type="password" id="r-pass" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label data-i18n="f.passconfirm"></label>
+        <input type="password" id="r-pass2" placeholder="••••••••" onkeypress="if(event.key==='Enter') doRegister()">
+      </div>
+      <div id="r-alert"></div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()" data-i18n="auth.register"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="screen-app">
+  <div class="flag"></div>
+  <header>
+    <div class="hdr-brand">
+      <img src="evento.png" alt="LEMC" onerror="this.style.display='none'">
+      <div>
+        <h1>LEMC</h1>
+        <p>8th International Meeting · Munich 2026</p>
+      </div>
+    </div>
+    <div class="hdr-user">
+      <span class="em" id="hdr-email"></span>
+      <button class="lang-btn" onclick="toggleLang()" id="lang-app-btn">🇬🇧 EN</button>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()" data-i18n="nav.logout"></button>
+    </div>
+  </header>
+  <nav>
+    <button class="active" onclick="showPage('home')" data-i18n="nav.home"></button>
+    <button onclick="showPage('profile')" data-i18n="nav.profile"></button>
+    <button id="nav-admin" style="display:none" onclick="showPage('admin')" data-i18n="nav.admin"></button>
+  </nav>
+
+  <main>
+
+    <!-- ══ HOME ══ -->
+    <div id="page-home" class="page active">
+      <div class="event-hero">
+        <div class="event-hero-text">
+          <h2>8th International Meeting</h2>
+          <p>Law Enforcement Motorcycle Clubs Coalition</p>
+          <div class="event-grid">
+            <div class="ev-item"><div class="ev-icon">📅</div>
+              <div class="ev-label" data-i18n="ev.date"></div><div class="ev-val">2026 · Munich</div></div>
+            <div class="ev-item"><div class="ev-icon">🇩🇪</div>
+              <div class="ev-label" data-i18n="ev.location"></div><div class="ev-val">Munich, Germany</div></div>
+            <div class="ev-item"><div class="ev-icon">🏍️</div>
+              <div class="ev-label" data-i18n="ev.event"></div><div class="ev-val" data-i18n="ev.intl"></div></div>
+            <div class="ev-item"><div class="ev-icon">🎽</div>
+              <div class="ev-label" data-i18n="ev.kit"></div><div class="ev-val">R$ 72,00</div></div>
+          </div>
+        </div>
+        <div class="event-hero-img">
+          <img src="evento.png" alt="LEMC 2026" onerror="this.parentElement.style.display='none'">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-i18n="home.clubs"></div>
+        <div class="clubs-grid" id="clubs-list"></div>
+      </div>
+      <div class="card" style="text-align:center; padding:22px">
+        <p style="color:var(--muted); margin-bottom:14px; font-size:.9em" data-i18n="home.cta.text"></p>
+        <button class="btn btn-primary" onclick="showPage('profile')" data-i18n="home.cta.btn"></button>
+      </div>
+    </div>
+
+    <!-- ══ PROFILE ══ -->
+    <div id="page-profile" class="page">
+      <div id="profile-status-banner"></div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="sec.personal"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="f.fullname"></label>
+            <input type="text" id="p-name" data-i18n-ph="f.fullname.ph">
+          </div>
+          <div class="form-group">
+            <label data-i18n="f.rank"></label>
+            <select id="p-rank">
+              <option value="" data-i18n="opt.select"></option>
+              <option value="Full Patch">Full Patch</option>
+              <option value="Próspero">Próspero</option>
+              <option value="Suporte">Suporte</option>
+              <option value="Hangaround">Hangaround</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="f.motoclub"></label>
+            <select id="p-club">
+              <option value="" data-i18n="opt.select"></option>
+              <option>Nacionaes LEMC</option>
+              <option>Batedores LEMC</option>
+              <option>Lord's Guardians LE FR MC</option>
+              <option>Blue Knights LEMC</option>
+              <option>Iron Legion LEMC</option>
+              <option>Locks &amp; Bikes LEMC</option>
+              <option>Despatch Riders LEMC</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="f.chapter"></label>
+            <input type="text" id="p-chapter" data-i18n-ph="f.chapter.ph">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="f.country"></label>
+            <input type="text" id="p-country" data-i18n-ph="f.country.ph">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="f.phone"></label>
+            <input type="tel" id="p-phone" data-i18n-ph="f.phone.ph">
+          </div>
+          <div class="form-group">
+            <label data-i18n="f.passport"></label>
+            <input type="text" id="p-passport" placeholder="Ex: BR123456">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="f.shirtsize"></label>
+            <select id="p-size"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="sec.travel"></div>
+        <p style="color:var(--gold);font-size:.78em;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;opacity:.8" data-i18n="travel.arrival"></p>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="travel.flightdate"></label>
+            <input type="date" id="p-flight-date">
+          </div>
+          <div class="form-group">
+            <label data-i18n="travel.flightnum"></label>
+            <input type="text" id="p-flight-num" data-i18n-ph="travel.flightnum.ph">
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="travel.arrmode"></label>
+          <div class="radio-group" id="arrival-method-group">
+            <label class="radio-opt" onclick="selectArrival(this,'train')">
+              <input type="radio" name="arrival" value="train"><span class="rdot"></span>
+              🚂 <span data-i18n="arr.train"></span>
+            </label>
+            <label class="radio-opt" onclick="selectArrival(this,'plane')">
+              <input type="radio" name="arrival" value="plane"><span class="rdot"></span>
+              ✈️ <span data-i18n="arr.plane"></span>
+            </label>
+            <label class="radio-opt" onclick="selectArrival(this,'car')">
+              <input type="radio" name="arrival" value="car"><span class="rdot"></span>
+              🚗 <span data-i18n="arr.car"></span>
+            </label>
+            <label class="radio-opt" onclick="selectArrival(this,'moto')">
+              <input type="radio" name="arrival" value="moto"><span class="rdot"></span>
+              🏍️ <span data-i18n="arr.moto"></span>
+            </label>
+            <label class="radio-opt" onclick="selectArrival(this,'balloon')">
+              <input type="radio" name="arrival" value="balloon"><span class="rdot"></span>
+              🎈 <span data-i18n="arr.balloon"></span>
+            </label>
+          </div>
+          <input type="hidden" id="p-arrival-method" value="">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="travel.arrdate"></label>
+            <input type="date" id="p-arrival-date">
+          </div>
+          <div class="form-group">
+            <label data-i18n="travel.arrtime"></label>
+            <input type="time" id="p-arrival-time">
+          </div>
+        </div>
+        <div style="height:1px;background:var(--border);margin:14px 0"></div>
+        <p style="color:var(--gold);font-size:.78em;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;opacity:.8" data-i18n="travel.return"></p>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="travel.deptdate"></label>
+            <input type="date" id="p-depart-date">
+          </div>
+          <div class="form-group">
+            <label data-i18n="travel.deptnum"></label>
+            <input type="text" id="p-depart-num" data-i18n-ph="travel.deptnum.ph">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="sec.companion"></div>
+        <div class="form-group">
+          <label data-i18n="comp.will"></label>
+          <div class="radio-group">
+            <label class="radio-opt" onclick="setCompanion(this,false)">
+              <input type="radio" name="companion" value="solo"><span class="rdot"></span>
+              <span data-i18n="comp.alone"></span>
+            </label>
+            <label class="radio-opt" onclick="setCompanion(this,true)">
+              <input type="radio" name="companion" value="comp"><span class="rdot"></span>
+              <span data-i18n="comp.with"></span>
+            </label>
+          </div>
+        </div>
+        <div class="companion-box" id="companion-fields">
+          <div class="companion-title" data-i18n="comp.details"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="f.fullname"></label>
+              <input type="text" id="c-name" data-i18n-ph="f.fullname.ph">
+            </div>
+            <div class="form-group">
+              <label data-i18n="comp.chaporg"></label>
+              <input type="text" id="c-club" data-i18n-ph="comp.chaporg.ph">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="comp.origin"></label>
+              <input type="text" id="c-country" data-i18n-ph="f.country.ph">
+            </div>
+            <div class="form-group">
+              <label data-i18n="f.phone"></label>
+              <input type="tel" id="c-phone" data-i18n-ph="f.phone.ph">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="f.passport"></label>
+              <input type="text" id="c-passport" placeholder="Ex: BR654321">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="sec.kit"></div>
+        <p style="color:var(--muted);font-size:.86em;margin-bottom:13px" data-i18n="kit.desc"></p>
+        <div class="kit-row">
+          <div>
+            <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.qty.label"></label>
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="changeKitQty(-1)">−</button>
+              <span class="qty-num" id="kit-qty">1</span>
+              <button class="qty-btn" onclick="changeKitQty(1)">+</button>
+            </div>
+          </div>
+          <div class="kit-total-wrap">
+            <div class="ktl" id="kit-breakdown">1 kit × R$ 72,00</div>
+            <div class="ktv" id="kit-total">R$ 72,00</div>
+          </div>
+        </div>
+        <div class="kit-extras" id="kit-extras">
+          <div class="extras-title" data-i18n="kit.extras.title"></div>
+          <label class="check-opt" id="co-shirt-opt" onclick="toggleCompExtra('shirt')">
+            <input type="checkbox" id="co-shirt"><span class="cbox"></span>
+            <div class="co-label">
+              <div data-i18n="kit.shirt"></div>
+              <div style="font-size:.8em;color:var(--muted)" data-i18n="kit.shirt.sub"></div>
+            </div>
+            <span class="co-price">+ R$ 44,00</span>
+          </label>
+          <div class="extra-size-row" id="extra-shirt-size-row">
+            <div class="form-group" style="max-width:220px;margin-bottom:6px">
+              <label data-i18n="kit.femsize"></label>
+              <select id="co-shirt-size"></select>
+            </div>
+          </div>
+          <label class="check-opt" id="co-cup-opt" onclick="toggleCompExtra('cup')">
+            <input type="checkbox" id="co-cup"><span class="cbox"></span>
+            <div class="co-label">
+              <div data-i18n="kit.cup"></div>
+              <div style="font-size:.8em;color:var(--muted)" data-i18n="kit.cup.sub"></div>
+            </div>
+            <span class="co-price">+ R$ 12,00</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="sec.notes"></div>
+        <div class="form-group" style="margin-bottom:0">
+          <label data-i18n="notes.label"></label>
+          <textarea id="p-notes" rows="3" data-i18n-ph="notes.ph"></textarea>
+        </div>
+      </div>
+
+      <div id="profile-alert"></div>
+      <button class="btn btn-primary btn-full" onclick="saveProfile()" data-i18n="btn.save" style="margin-bottom:28px"></button>
+    </div>
+
+    <!-- ══ ADMIN ══ -->
+    <div id="page-admin" class="page">
+      <div id="admin-lock" style="display:none">
+        <div class="card" style="max-width:340px;margin:40px auto;text-align:center">
+          <div class="card-title">Acesso Restrito</div>
+          <div class="form-group">
+            <label>Senha administrativa</label>
+            <input type="password" id="ap-pass" placeholder="••••••••" onkeypress="if(event.key==='Enter') unlockAdmin()">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="unlockAdmin()">Entrar</button>
+          <div id="ap-err" style="color:var(--err);margin-top:8px;font-size:.86em"></div>
+        </div>
+      </div>
+      <div id="admin-dash" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:9px">
+          <span style="color:var(--gold);font-size:1.05em;font-weight:700;text-transform:uppercase;letter-spacing:2px">Painel Administrativo</span>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ CSV</button>
+            <button class="btn btn-secondary btn-sm" onclick="generatePDF()">📄 PDF</button>
+            <button class="btn btn-secondary btn-sm" onclick="openPixModal()">⚙ PIX</button>
+            <button class="btn btn-secondary btn-sm" onclick="openClubsModal()">🏍 Clubes</button>
+          </div>
+        </div>
+        <div class="stats-grid" id="admin-stats"></div>
+        <div class="card" style="padding:13px 18px">
+          <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="margin:0;flex:1;min-width:150px">
+              <label>Buscar / Search</label>
+              <input type="text" id="a-search" placeholder="Nome, capítulo, e-mail…" oninput="renderAdminTable()">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Status</label>
+              <select id="a-status" onchange="renderAdminTable()">
+                <option value="">Todos / All</option>
+                <option value="incomplete">Incompleto</option>
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago / Paid</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Moto Clube</label>
+              <select id="a-chapter" onchange="renderAdminTable()">
+                <option value="">Todos</option>
+                <option>Nacionaes LEMC</option>
+                <option>Batedores LEMC</option>
+                <option>Lord's Guardians LE FR MC</option>
+                <option>Blue Knights LEMC</option>
+                <option>Iron Legion LEMC</option>
+                <option>Locks &amp; Bikes LEMC</option>
+                <option>Despatch Riders LEMC</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Inscrições / Registrations (<span id="reg-count">0</span>)</div>
+          <div class="table-wrap">
+            <table class="reg-table">
+              <thead>
+                <tr>
+                  <th>E-mail</th><th>Nome</th><th>Graduação</th><th>Moto Clube</th><th>Chapter</th>
+                  <th>País</th><th>Tam.</th><th>Voo Chegada</th><th>Chegada MCH</th>
+                  <th>Hora</th><th>Meio</th><th>Voo Retorno</th>
+                  <th>Acomp.</th><th>Extras</th><th>Kits</th><th>Total</th>
+                  <th>Status</th><th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="reg-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <footer>LEMC · 8th International Meeting · Munich · Germany · 2026</footer>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="modal-overlay" id="saved-modal">
+  <div class="modal">
+    <div style="font-size:2.8em;text-align:center;margin-bottom:8px">✅</div>
+    <h3 style="text-align:center" data-i18n="modal.saved"></h3>
+    <div class="summary-box" id="saved-summary"></div>
+    <div class="pix-box">
+      <p style="font-size:.78em;color:var(--muted);margin-bottom:5px" data-i18n="modal.pix.pay"></p>
+      <p style="font-size:.74em;color:#666" data-i18n="modal.pix.key"></p>
+      <span class="pix-key" id="modal-pix" onclick="copyPix()" title="Click to copy / Clique para copiar">—</span>
+      <p style="font-size:.7em;color:#555;margin-top:3px" data-i18n="modal.pix.note"></p>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="closeModal('saved-modal')" data-i18n="btn.understood"></button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pix-modal">
+  <div class="modal">
+    <h3>Configurar Chave PIX</h3>
+    <div class="form-group">
+      <label>Chave PIX</label>
+      <input type="text" id="pix-input" placeholder="CPF, CNPJ, e-mail, telefone…">
+    </div>
+    <div style="display:flex;gap:9px">
+      <button class="btn btn-primary" onclick="savePix()">Salvar</button>
+      <button class="btn btn-secondary" onclick="closeModal('pix-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clubs-modal">
+  <div class="modal" style="max-width:560px">
+    <h3>Gerenciar Moto Clubes Confirmados</h3>
+    <div style="display:grid;grid-template-columns:auto 1fr 100px 38px;gap:8px;align-items:end;margin-bottom:14px">
+      <div>
+        <label style="display:block;color:var(--gold);font-size:.72em;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Brasão</label>
+        <label class="brasao-upload-btn" title="Carregar brasão">
+          🖼️
+          <input type="file" id="brasao-file" accept="image/*" style="display:none" onchange="previewBrasao(this)">
+        </label>
+        <img id="brasao-preview" style="display:none;margin-top:4px" class="brasao-preview" alt="">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Nome do Clube *</label>
+        <input type="text" id="club-name-in" placeholder="Ex: Nacionaes LEMC">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>País</label>
+        <input type="text" id="club-country-in" placeholder="Brasil">
+      </div>
+      <div style="padding-bottom:0">
+        <button class="btn btn-primary btn-sm" style="height:36px" onclick="addClub()">+ Add</button>
+      </div>
+    </div>
+    <div id="clubs-mgmt-list" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:5px"></div>
+    <div style="margin-top:13px;text-align:right">
+      <button class="btn btn-secondary" onclick="closeModal('clubs-modal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+const ADMIN_EMAILS = ['marcello.barros.rj@gmail.com', 'admin@lemc.com'];
+const ADMIN_SECRET = 'lemc2026';
+const KIT_PRICE    = 72;
+const COMP_SHIRT   = 44;
+const COMP_CUP     = 12;
+
+// ══════════════════════════════════════════
+//  I18N
+// ══════════════════════════════════════════
+let currentLang = localStorage.getItem('lemc_lang') || 'pt';
+
+const TRANS = {
+  pt: {
+    'auth.signin':'Entrar', 'auth.register':'Criar conta',
+    'f.email':'E-mail', 'f.email.ph':'seu@email.com',
+    'f.password':'Senha', 'f.passmin':'Senha (mín. 6 caracteres)',
+    'f.passconfirm':'Confirmar senha',
+    'nav.home':'Início', 'nav.profile':'Minha Inscrição',
+    'nav.admin':'Administração', 'nav.logout':'Sair',
+    'ev.date':'Data', 'ev.location':'Local', 'ev.event':'Evento',
+    'ev.intl':'Internacional', 'ev.kit':'Kit / pessoa',
+    'home.clubs':'Moto Clubes Confirmados',
+    'home.cta.text':'Ainda não preencheu sua inscrição?',
+    'home.cta.btn':'Preencher minha inscrição →',
+    'sec.personal':'👤 Dados Pessoais', 'sec.travel':'✈️ Informações de Viagem',
+    'sec.companion':'👥 Acompanhante', 'sec.kit':'🎒 Kit de Participação',
+    'sec.notes':'📝 Observações',
+    'f.fullname':'Nome Completo *', 'f.fullname.ph':'Seu nome completo',
+    'f.rank':'Graduação *', 'f.motoclub':'Moto Clube *', 'f.chapter':'Chapter *', 'f.chapter.ph':'Ex: Rio de Janeiro',
+    'f.country':'País *', 'f.country.ph':'Brasil',
+    'f.phone':'Telefone / WhatsApp *', 'f.phone.ph':'(21) 99999-9999',
+    'f.passport':'Número do Passaporte *', 'f.shirtsize':'Tamanho da Camiseta *',
+    'opt.select':'Selecione…',
+    'travel.arrival':'Chegada', 'travel.return':'Retorno',
+    'travel.flightdate':'Data do Voo para a Europa *',
+    'travel.flightnum':'Número do Voo de Chegada *',
+    'travel.flightnum.ph':'Ex: G3 1234, LA 8100',
+    'travel.arrmode':'Forma de Chegada a Munich *',
+    'travel.arrdate':'Data de Chegada a Munich *',
+    'travel.arrtime':'Hora Estimada de Chegada *',
+    'travel.deptdate':'Data do Voo de Partida da Europa',
+    'travel.deptnum':'Número do Voo de Partida',
+    'travel.deptnum.ph':'Ex: G3 5678',
+    'arr.train':'Trem', 'arr.plane':'Avião', 'arr.car':'Carro',
+    'arr.moto':'Moto', 'arr.balloon':'Balão',
+    'comp.will':'Irá viajar…', 'comp.alone':'Sozinho(a)',
+    'comp.with':'Com acompanhante', 'comp.details':'Dados do Acompanhante',
+    'comp.chaporg':'Capítulo / Organização', 'comp.chaporg.ph':'Clube ou organização',
+    'comp.origin':'País de Origem',
+    'kit.desc':'Kit completo (R$ 72,00): T-shirt manga longa · Copo com tirante · Ficha de poler · Mochila',
+    'kit.qty.label':'Quantidade de kits (R$ 72,00 cada)',
+    'kit.extras.title':'Itens adicionais para acompanhante',
+    'kit.shirt':'🧥 Camiseta feminina manga longa',
+    'kit.shirt.sub':'Item feminino adicional para acompanhante',
+    'kit.cup':'☕ Copo com tirante',
+    'kit.cup.sub':'Copo adicional para acompanhante',
+    'kit.femsize':'Tamanho feminino *',
+    'notes.label':'Informações adicionais',
+    'notes.ph':'Alergias, necessidades especiais, contato de emergência…',
+    'btn.save':'Salvar Inscrição', 'btn.understood':'Entendido',
+    'modal.saved':'Inscrição Salva!',
+    'modal.pix.pay':'Realize o pagamento via PIX',
+    'modal.pix.key':'Chave PIX:',
+    'modal.pix.note':'Informe seu nome como identificação na transferência',
+    'status.empty':'📋 Inscrição não preenchida. Preencha os dados abaixo e salve.',
+    'status.incomplete':'📋 Inscrição incompleta — revise e salve.',
+    'status.pending':'⏳ Inscrição salva. Pagamento do kit aguardando confirmação.',
+    'status.paid':'✅ Inscrição confirmada e pagamento aprovado!',
+    'size.p':'P – Pequeno', 'size.m':'M – Médio', 'size.g':'G – Grande',
+    'size.gg':'GG – Extra Grande', 'size.xgg':'XGG',
+    'size.pp':'PP – Extra Pequeno',
+    'err.fields':'Campos obrigatórios faltando',
+    'err.email':'E-mail inválido.', 'err.passlen':'Senha mínima de 6 caracteres.',
+    'err.passmatch':'As senhas não coincidem.',
+    'err.emailtaken':'E-mail já cadastrado. Faça login.',
+    'err.wrongpass':'E-mail ou senha incorretos.',
+    'err.compfields':'Preencha nome, telefone e passaporte do acompanhante.',
+    'err.femsize':'Selecione o tamanho feminino da camiseta da acompanhante.',
+  },
+  en: {
+    'auth.signin':'Sign In', 'auth.register':'Create Account',
+    'f.email':'E-mail', 'f.email.ph':'your@email.com',
+    'f.password':'Password', 'f.passmin':'Password (min. 6 characters)',
+    'f.passconfirm':'Confirm Password',
+    'nav.home':'Home', 'nav.profile':'My Registration',
+    'nav.admin':'Administration', 'nav.logout':'Sign Out',
+    'ev.date':'Date', 'ev.location':'Location', 'ev.event':'Event',
+    'ev.intl':'International', 'ev.kit':'Kit / person',
+    'home.clubs':'Confirmed Motorcycle Clubs',
+    'home.cta.text':"Haven't filled in your registration yet?",
+    'home.cta.btn':'Fill in my registration →',
+    'sec.personal':'👤 Personal Information', 'sec.travel':'✈️ Travel Information',
+    'sec.companion':'👥 Companion', 'sec.kit':'🎒 Participation Kit',
+    'sec.notes':'📝 Notes',
+    'f.fullname':'Full Name *', 'f.fullname.ph':'Your full name',
+    'f.rank':'Rank *', 'f.motoclub':'Moto Club *', 'f.chapter':'Chapter *', 'f.chapter.ph':'e.g. Rio de Janeiro',
+    'f.country':'Country *', 'f.country.ph':'Brazil',
+    'f.phone':'Phone / WhatsApp *', 'f.phone.ph':'+1 (555) 000-0000',
+    'f.passport':'Passport Number *', 'f.shirtsize':'T-Shirt Size *',
+    'opt.select':'Select…',
+    'travel.arrival':'Arrival', 'travel.return':'Return',
+    'travel.flightdate':'Flight Date to Europe *',
+    'travel.flightnum':'Arrival Flight Number *',
+    'travel.flightnum.ph':'Ex: LH 1234, BA 8100',
+    'travel.arrmode':'Mode of Arrival in Munich *',
+    'travel.arrdate':'Arrival Date in Munich *',
+    'travel.arrtime':'Estimated Arrival Time *',
+    'travel.deptdate':'Departure Date from Europe',
+    'travel.deptnum':'Departure Flight Number',
+    'travel.deptnum.ph':'Ex: LH 5678',
+    'arr.train':'Train', 'arr.plane':'Plane', 'arr.car':'Car',
+    'arr.moto':'Motorcycle', 'arr.balloon':'Balloon',
+    'comp.will':'Will travel…', 'comp.alone':'Alone',
+    'comp.with':'With companion', 'comp.details':'Companion Details',
+    'comp.chaporg':'Chapter / Organization', 'comp.chaporg.ph':'Club or organization',
+    'comp.origin':'Country of Origin',
+    'kit.desc':'Full kit (R$ 72.00): Long sleeve t-shirt · Cup with strap · Poler chip · Backpack',
+    'kit.qty.label':'Number of kits (R$ 72.00 each)',
+    'kit.extras.title':'Additional items for companion',
+    'kit.shirt':"🧥 Women's long sleeve t-shirt",
+    'kit.shirt.sub':'Additional women\'s item for companion',
+    'kit.cup':'☕ Cup with strap',
+    'kit.cup.sub':'Additional cup for companion',
+    'kit.femsize':"Women's size *",
+    'notes.label':'Additional information',
+    'notes.ph':'Allergies, special needs, emergency contact…',
+    'btn.save':'Save Registration', 'btn.understood':'Got it',
+    'modal.saved':'Registration Saved!',
+    'modal.pix.pay':'Make payment via PIX',
+    'modal.pix.key':'PIX Key:',
+    'modal.pix.note':'Use your name as identification in the transfer',
+    'status.empty':'📋 Registration not completed. Fill in the details below and save.',
+    'status.incomplete':'📋 Incomplete registration — review and save.',
+    'status.pending':'⏳ Registration saved. Kit payment awaiting confirmation.',
+    'status.paid':'✅ Registration confirmed and payment approved!',
+    'size.p':'S – Small', 'size.m':'M – Medium', 'size.g':'L – Large',
+    'size.gg':'XL – Extra Large', 'size.xgg':'XXL',
+    'size.pp':'XS – Extra Small',
+    'err.fields':'Required fields missing',
+    'err.email':'Invalid e-mail.', 'err.passlen':'Minimum 6-character password.',
+    'err.passmatch':'Passwords do not match.',
+    'err.emailtaken':'E-mail already registered. Please sign in.',
+    'err.wrongpass':'Incorrect e-mail or password.',
+    'err.compfields':'Fill in companion name, phone and passport.',
+    'err.femsize':"Select the companion's women's shirt size.",
+  }
+};
+
+function t(key) { return TRANS[currentLang]?.[key] ?? TRANS.pt[key] ?? key; }
+
+function applyLang() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : 'en';
+  // Static text nodes
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  // Placeholders
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  // Country default placeholder for p-country
+  const pCountry = document.getElementById('p-country');
+  if (pCountry && !pCountry.value) pCountry.value = '';
+
+  // Lang toggle buttons
+  const label = currentLang === 'pt' ? '🇬🇧 EN' : '🇧🇷 PT';
+  document.querySelectorAll('.lang-btn').forEach(b => b.textContent = label);
+
+  // Shirt size selects
+  rebuildShirtSelects();
+}
+
+function rebuildShirtSelects() {
+  const sizes = [
+    ['', t('opt.select')],
+    ['P',  t('size.p')],
+    ['M',  t('size.m')],
+    ['G',  t('size.g')],
+    ['GG', t('size.gg')],
+    ['XGG',t('size.xgg')],
+  ];
+  const femSizes = [
+    ['', t('opt.select')],
+    ['PP', t('size.pp')],
+    ...sizes.slice(1),
+  ];
+  ['p-size'].forEach(id => {
+    const s = document.getElementById(id); if (!s) return;
+    const v = s.value;
+    s.innerHTML = sizes.map(([val,lbl]) => `<option value="${val}">${lbl}</option>`).join('');
+    s.value = v;
+  });
+  ['co-shirt-size'].forEach(id => {
+    const s = document.getElementById(id); if (!s) return;
+    const v = s.value;
+    s.innerHTML = femSizes.map(([val,lbl]) => `<option value="${val}">${lbl}</option>`).join('');
+    s.value = v;
+  });
+  // Update select first options that use data-i18n
+  document.querySelectorAll('select option[data-i18n]').forEach(o => {
+    o.textContent = t(o.dataset.i18n);
+  });
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'pt' ? 'en' : 'pt';
+  localStorage.setItem('lemc_lang', currentLang);
+  applyLang();
+  // Re-render dynamic parts if needed
+  if (currentUser) {
+    renderClubs();
+    loadProfile();
+    if (adminUnlocked || (currentUser && ADMIN_EMAILS.includes(currentUser.email))) {
+      const dash = document.getElementById('admin-dash');
+      if (dash && dash.style.display !== 'none') renderAdminDashboard();
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+//  CRYPTO
+// ══════════════════════════════════════════
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════════════════
+//  DATA LAYER
+// ══════════════════════════════════════════
+const DEFAULT_CLUBS = [
+  { brasao:'', flag:'🇧🇷', name:'LEMC Brasil – Rio de Janeiro', country:'Brasil' },
+  { brasao:'', flag:'🇧🇷', name:'LEMC Brasil – São Paulo',      country:'Brasil' },
+  { brasao:'', flag:'🇺🇸', name:'LEMC USA – California',        country:'EUA'    },
+  { brasao:'', flag:'🇩🇪', name:'LEMC Germany – Munich',        country:'Alemanha'},
+  { brasao:'', flag:'🇵🇹', name:'LEMC Portugal – Lisboa',       country:'Portugal'},
+  { brasao:'', flag:'🇦🇷', name:'LEMC Argentina',               country:'Argentina'},
+];
+const LS = {
+  users()     { return JSON.parse(localStorage.getItem('lemc_users') || '[]'); },
+  regs()      { return JSON.parse(localStorage.getItem('lemc_regs')  || '[]'); },
+  clubs()     { return JSON.parse(localStorage.getItem('lemc_clubs') || JSON.stringify(DEFAULT_CLUBS)); },
+  pix()       { return localStorage.getItem('lemc_pix') || '(configure a chave PIX no painel admin)'; },
+  saveUsers(v){ localStorage.setItem('lemc_users',JSON.stringify(v)); },
+  saveRegs(v) { localStorage.setItem('lemc_regs', JSON.stringify(v)); },
+  saveClubs(v){ localStorage.setItem('lemc_clubs',JSON.stringify(v)); },
+  savePix(v)  { localStorage.setItem('lemc_pix',v); },
+  getReg(e)   { return LS.regs().find(r=>r.email===e)||null; },
+  upsertReg(reg){ const a=LS.regs().filter(r=>r.email!==reg.email); a.push(reg); LS.saveRegs(a); },
+};
+
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let currentUser   = null;
+let adminUnlocked = false;
+let kitQty        = 1;
+let hasCompanion  = false;
+let arrivalMethod = '';
+let compShirt     = false;
+let compCup       = false;
+let brasaoDataUrl = '';
+
+function isAdmin(){ return currentUser && (ADMIN_EMAILS.includes(currentUser.email) || adminUnlocked); }
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.getElementById('auth-login').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('auth-register').style.display = tab==='register' ? 'block' : 'none';
+  document.querySelectorAll('.auth-tab').forEach((b,i) =>
+    b.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+}
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('l-pass').value;
+  const div   = document.getElementById('l-alert');
+  if (!email||!pass){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}</div>`; return; }
+  const hash  = await sha256(email+pass);
+  const user  = LS.users().find(u=>u.email===email&&u.hash===hash);
+  if (!user){ div.innerHTML=`<div class="alert alert-e">${t('err.wrongpass')}</div>`; return; }
+  currentUser = { email }; launchApp();
+}
+
+async function doRegister() {
+  const email = document.getElementById('r-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('r-pass').value;
+  const pass2 = document.getElementById('r-pass2').value;
+  const div   = document.getElementById('r-alert');
+  if (!email||!pass){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}</div>`; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ div.innerHTML=`<div class="alert alert-e">${t('err.email')}</div>`; return; }
+  if (pass.length<6){ div.innerHTML=`<div class="alert alert-e">${t('err.passlen')}</div>`; return; }
+  if (pass!==pass2) { div.innerHTML=`<div class="alert alert-e">${t('err.passmatch')}</div>`; return; }
+  const users = LS.users();
+  if (users.find(u=>u.email===email)){ div.innerHTML=`<div class="alert alert-e">${t('err.emailtaken')}</div>`; return; }
+  const hash = await sha256(email+pass);
+  users.push({ email, hash, createdAt:new Date().toISOString() }); LS.saveUsers(users);
+  currentUser = { email }; launchApp();
+}
+
+function doLogout() {
+  currentUser=null; adminUnlocked=false;
+  document.getElementById('screen-app').style.display ='none';
+  document.getElementById('screen-auth').style.display='flex';
+  document.getElementById('l-pass').value='';
+}
+
+// ══════════════════════════════════════════
+//  APP LAUNCH
+// ══════════════════════════════════════════
+function launchApp() {
+  document.getElementById('screen-auth').style.display='none';
+  document.getElementById('screen-app').style.display ='block';
+  document.getElementById('hdr-email').textContent = currentUser.email;
+  document.getElementById('nav-admin').style.display = isAdmin() ? 'inline-block' : 'none';
+  applyLang(); rebuildShirtSelects();
+  renderClubs(); loadProfile(); showPage('home');
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+const PAGES = ['home','profile','admin'];
+function showPage(name) {
+  PAGES.forEach(p => document.getElementById('page-'+p).classList.toggle('active', p===name));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  const i = PAGES.indexOf(name);
+  if (i>=0) document.querySelectorAll('nav button')[i].classList.add('active');
+  if (name==='admin') {
+    if (isAdmin()) {
+      document.getElementById('admin-lock').style.display='none';
+      document.getElementById('admin-dash').style.display='block';
+      renderAdminDashboard();
+    } else {
+      document.getElementById('admin-lock').style.display='block';
+      document.getElementById('admin-dash').style.display='none';
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+//  HOME
+// ══════════════════════════════════════════
+function renderClubs() {
+  const clubs = LS.clubs();
+  const el = document.getElementById('clubs-list');
+  if (!clubs.length) { el.innerHTML=`<p style="color:var(--muted);font-size:.86em">${currentLang==='en'?'No clubs confirmed yet.':'Nenhum clube confirmado ainda.'}</p>`; return; }
+  el.innerHTML = clubs.map(c => {
+    const img = c.brasao
+      ? `<img src="${c.brasao}" class="club-brasao" alt="brasão">`
+      : `<div class="club-brasao-ph">${c.flag||'🏍️'}</div>`;
+    return `<div class="club-card">${img}<div><div class="club-name">${c.name}</div><div class="club-country">${c.country}</div></div></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  PROFILE – LOAD
+// ══════════════════════════════════════════
+function loadProfile() {
+  const reg = LS.getReg(currentUser.email);
+  const banner = document.getElementById('profile-status-banner');
+  if (!reg) {
+    banner.innerHTML=`<div class="status-banner sb-incomplete">${t('status.empty')}</div>`;
+    kitQty=1; hasCompanion=false; compShirt=false; compCup=false; updateKitUI(); return;
+  }
+  const sc = { incomplete:'sb-incomplete', pending:'sb-pending', paid:'sb-paid' };
+  const sk = { incomplete:'status.incomplete', pending:'status.pending', paid:'status.paid' };
+  const s  = reg.status in sc ? reg.status : 'incomplete';
+  banner.innerHTML=`<div class="status-banner ${sc[s]}">${t(sk[s])}</div>`;
+  const f=(id,v)=>{ const e=document.getElementById(id); if(e&&v!=null) e.value=v; };
+  f('p-name',reg.name); f('p-rank',reg.rank); f('p-club',reg.club); f('p-chapter',reg.chapter);
+  f('p-country',reg.country); f('p-phone',reg.phone); f('p-passport',reg.passport);
+  f('p-size',reg.shirtSize); f('p-flight-date',reg.flightDate); f('p-flight-num',reg.flightNum);
+  f('p-arrival-date',reg.arrivalDate); f('p-arrival-time',reg.arrivalTime);
+  f('p-depart-date',reg.departDate); f('p-depart-num',reg.departNum); f('p-notes',reg.notes);
+  if (reg.arrivalMethod) {
+    arrivalMethod=reg.arrivalMethod;
+    document.getElementById('p-arrival-method').value=arrivalMethod;
+    document.querySelectorAll('#arrival-method-group .radio-opt').forEach(el =>
+      el.classList.toggle('sel', el.querySelector('input').value===arrivalMethod));
+  }
+  hasCompanion=!!reg.companion;
+  document.querySelectorAll('[name="companion"]').forEach(r =>
+    r.closest('.radio-opt').classList.toggle('sel', r.value===(hasCompanion?'comp':'solo')));
+  document.getElementById('companion-fields').classList.toggle('show',hasCompanion);
+  document.getElementById('kit-extras').classList.toggle('show',hasCompanion);
+  if (hasCompanion&&reg.companion) {
+    const c=reg.companion;
+    f('c-name',c.name); f('c-club',c.club); f('c-country',c.country);
+    f('c-phone',c.phone); f('c-passport',c.passport);
+  }
+  compShirt=reg.compShirt||false; compCup=reg.compCup||false;
+  if (compShirt) f('co-shirt-size',reg.compShirtSize||'');
+  syncCO('co-shirt-opt','co-shirt',compShirt); syncCO('co-cup-opt','co-cup',compCup);
+  document.getElementById('extra-shirt-size-row').classList.toggle('show',compShirt);
+  kitQty=reg.kitQty||1; updateKitUI();
+}
+function syncCO(optId,cbId,state) {
+  document.getElementById(optId).classList.toggle('sel',state);
+  document.getElementById(cbId).checked=state;
+}
+
+// ══════════════════════════════════════════
+//  PROFILE – INTERACTIONS
+// ══════════════════════════════════════════
+function selectArrival(el,val) {
+  document.querySelectorAll('#arrival-method-group .radio-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel'); arrivalMethod=val;
+  document.getElementById('p-arrival-method').value=val;
+}
+function setCompanion(el,val) {
+  document.querySelectorAll('[name="companion"]').forEach(r=>r.closest('.radio-opt').classList.remove('sel'));
+  el.classList.add('sel'); hasCompanion=val;
+  document.getElementById('companion-fields').classList.toggle('show',val);
+  document.getElementById('kit-extras').classList.toggle('show',val);
+  if (!val){ compShirt=false; compCup=false; syncCO('co-shirt-opt','co-shirt',false); syncCO('co-cup-opt','co-cup',false);
+    document.getElementById('extra-shirt-size-row').classList.remove('show'); }
+  updateKitUI();
+}
+function toggleCompExtra(type) {
+  if (type==='shirt'){ compShirt=!compShirt; syncCO('co-shirt-opt','co-shirt',compShirt);
+    document.getElementById('extra-shirt-size-row').classList.toggle('show',compShirt); }
+  else { compCup=!compCup; syncCO('co-cup-opt','co-cup',compCup); }
+  updateKitUI();
+}
+function changeKitQty(d) { kitQty=Math.max(1,Math.min(10,kitQty+d)); updateKitUI(); }
+function updateKitUI() {
+  const extra = (hasCompanion&&compShirt?COMP_SHIRT:0)+(hasCompanion&&compCup?COMP_CUP:0);
+  const total = kitQty*KIT_PRICE + extra;
+  document.getElementById('kit-qty').textContent=kitQty;
+  let bd=`${kitQty} kit${kitQty>1?'s':''} × R$ ${KIT_PRICE},00`;
+  if (hasCompanion&&compShirt) bd+=` · ${currentLang==='en'?"Women's shirt":"Cam.Fem."} R$ ${COMP_SHIRT},00`;
+  if (hasCompanion&&compCup)   bd+=` · ${currentLang==='en'?'Cup':'Copo'} R$ ${COMP_CUP},00`;
+  document.getElementById('kit-breakdown').textContent=bd;
+  document.getElementById('kit-total').textContent=`R$ ${total},00`;
+}
+
+// ══════════════════════════════════════════
+//  PROFILE – SAVE
+// ══════════════════════════════════════════
+function saveProfile() {
+  const v=id=>document.getElementById(id)?.value?.trim()||'';
+  const div=document.getElementById('profile-alert');
+  const name=v('p-name'), rank=v('p-rank'), club=v('p-club'), chapter=v('p-chapter'), country=v('p-country')||'Brasil';
+  const phone=v('p-phone'), passport=v('p-passport'), shirtSize=v('p-size');
+  const flightDate=v('p-flight-date'), flightNum=v('p-flight-num');
+  const arrivalDate=v('p-arrival-date'), arrivalTime=v('p-arrival-time');
+  const departDate=v('p-depart-date'), departNum=v('p-depart-num'), notes=v('p-notes');
+  const req={ [t('f.fullname')]:name, [t('f.rank')]:rank, [t('f.motoclub')]:club,
+    [t('f.phone')]:phone, [t('f.passport')]:passport, [t('f.shirtsize')]:shirtSize,
+    [t('travel.flightdate')]:flightDate, [t('travel.flightnum')]:flightNum,
+    [t('travel.arrmode')]:arrivalMethod, [t('travel.arrdate')]:arrivalDate,
+    [t('travel.arrtime')]:arrivalTime };
+  const missing=Object.entries(req).filter(([,v])=>!v).map(([k])=>k);
+  if (missing.length){ div.innerHTML=`<div class="alert alert-e">${t('err.fields')}: <strong>${missing.join(', ')}</strong></div>`;
+    div.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  let companion=null;
+  if (hasCompanion) {
+    const cn=v('c-name'),cp=v('c-phone'),cpa=v('c-passport');
+    if (!cn||!cp||!cpa){ div.innerHTML=`<div class="alert alert-e">${t('err.compfields')}</div>`;
+      div.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    companion={ name:cn, club:v('c-club'), country:v('c-country'), phone:cp, passport:cpa };
+  }
+  const compShirtSize=compShirt?v('co-shirt-size'):'';
+  if (compShirt&&!compShirtSize){ div.innerHTML=`<div class="alert alert-e">${t('err.femsize')}</div>`;
+    div.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  div.innerHTML='';
+  const kitExtra=(hasCompanion&&compShirt?COMP_SHIRT:0)+(hasCompanion&&compCup?COMP_CUP:0);
+  const kitTotal=kitQty*KIT_PRICE+kitExtra;
+  const existing=LS.getReg(currentUser.email);
+  const reg={ email:currentUser.email, name, rank, club, chapter, country, phone, passport, shirtSize,
+    flightDate, flightNum, arrivalMethod, arrivalDate, arrivalTime, departDate, departNum,
+    companion, compShirt:hasCompanion&&compShirt, compShirtSize, compCup:hasCompanion&&compCup,
+    kitQty, kitExtra, kitTotal, notes,
+    status:existing?.status||'pending',
+    createdAt:existing?.createdAt||new Date().toISOString(),
+    updatedAt:new Date().toISOString() };
+  LS.upsertReg(reg); loadProfile();
+  const meth={train:t('arr.train'),plane:t('arr.plane'),car:t('arr.car'),moto:t('arr.moto'),balloon:t('arr.balloon')};
+  document.getElementById('saved-summary').innerHTML=`
+    <div class="sum-item"><span>${t('f.fullname').replace(' *','')}:</span><span>${name} (${rank})</span></div>
+    <div class="sum-item"><span>${t('f.motoclub').replace(' *','')}:</span><span>${club}${chapter?' · '+chapter:''}</span></div>
+    <div class="sum-item"><span>${t('f.passport').replace(' *','')}:</span><span>${passport}</span></div>
+    <div class="sum-item"><span>${t('travel.flightdate').replace(' *','')}:</span><span>${flightDate} · ${flightNum}</span></div>
+    <div class="sum-item"><span>${t('travel.arrdate').replace(' *','')}:</span><span>${arrivalDate} ${arrivalTime} · ${meth[arrivalMethod]||arrivalMethod}</span></div>
+    ${departDate?`<div class="sum-item"><span>${t('travel.deptdate')}:</span><span>${departDate}${departNum?' · '+departNum:''}</span></div>`:''}
+    ${companion?`<div class="sum-item"><span>${t('sec.companion').replace('👥 ','')}:</span><span>${companion.name}</span></div>`:''}
+    ${compShirt?`<div class="sum-item"><span>${t('kit.femsize').replace(' *','')}:</span><span>${compShirtSize}</span></div>`:''}
+    <div class="sum-item"><span>Kits:</span><span>${kitQty}×</span></div>
+    <div class="sum-total"><span>Total:</span><span>R$ ${kitTotal},00</span></div>`;
+  document.getElementById('modal-pix').textContent=LS.pix();
+  openModal('saved-modal');
+}
+
+// ══════════════════════════════════════════
+//  ADMIN – UNLOCK
+// ══════════════════════════════════════════
+function unlockAdmin() {
+  if (document.getElementById('ap-pass').value===ADMIN_SECRET) {
+    adminUnlocked=true;
+    document.getElementById('nav-admin').style.display='inline-block';
+    document.getElementById('admin-lock').style.display='none';
+    document.getElementById('admin-dash').style.display='block';
+    renderAdminDashboard();
+  } else { document.getElementById('ap-err').textContent='Senha incorreta / Wrong password.'; }
+}
+
+// ══════════════════════════════════════════
+//  ADMIN – DASHBOARD
+// ══════════════════════════════════════════
+function renderAdminDashboard() { renderStats(); renderAdminTable(); }
+
+function renderStats() {
+  const all=LS.regs(), paid=all.filter(r=>r.status==='paid');
+  const kits=all.reduce((s,r)=>s+(r.kitQty||0),0);
+  const tot=all.reduce((s,r)=>s+(r.kitTotal||0),0);
+  const recv=paid.reduce((s,r)=>s+(r.kitTotal||0),0);
+  const comp=all.filter(r=>r.companion).length;
+  document.getElementById('admin-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${all.length}</div><div class="stat-lbl">Inscrições</div></div>
+    <div class="stat-card"><div class="stat-num">${kits}</div><div class="stat-lbl">Kits</div></div>
+    <div class="stat-card"><div class="stat-num">${comp}</div><div class="stat-lbl">Com Acomp.</div></div>
+    <div class="stat-card"><div class="stat-num">${paid.length}</div><div class="stat-lbl">Confirmados</div></div>
+    <div class="stat-card"><div class="stat-num" style="font-size:1.1em">R$&nbsp;${tot}</div><div class="stat-lbl">Previsto</div></div>
+    <div class="stat-card"><div class="stat-num" style="font-size:1.1em">R$&nbsp;${recv}</div><div class="stat-lbl">Recebido</div></div>`;
+}
+
+function getFilteredRegs() {
+  const search  = (document.getElementById('a-search')?.value||'').toLowerCase();
+  const statusF = document.getElementById('a-status')?.value||'';
+  const chapF   = document.getElementById('a-chapter')?.value||'';
+  return LS.regs().filter(r => {
+    const ms=!search||(r.email||'').toLowerCase().includes(search)||
+      (r.name||'').toLowerCase().includes(search)||(r.club||'').toLowerCase().includes(search)||
+      (r.chapter||'').toLowerCase().includes(search);
+    const mf=!statusF||r.status===statusF;
+    const mc=!chapF||r.club===chapF;
+    return ms&&mf&&mc;
+  });
+}
+
+function renderAdminTable() {
+  const meth={train:'🚂',plane:'✈️',car:'🚗',moto:'🏍️',balloon:'🎈'};
+  const filtered=getFilteredRegs();
+  document.getElementById('reg-count').textContent=filtered.length;
+  const tbody=document.getElementById('reg-tbody');
+  if (!filtered.length){ tbody.innerHTML='<tr><td colspan="18" style="text-align:center;color:#555;padding:26px">Nenhuma inscrição encontrada</td></tr>'; return; }
+  tbody.innerHTML=filtered.map(r=>{
+    const badge=r.status==='paid'?'<span class="badge badge-paid">Pago</span>':
+      r.status==='pending'?'<span class="badge badge-pending">Pendente</span>':
+      '<span class="badge badge-incomplete">Incompleto</span>';
+    const toggle=r.status!=='paid'
+      ?`<button class="btn btn-secondary btn-sm" onclick="setRegStatus('${r.email}','paid')">✓</button>`
+      :`<button class="btn btn-sm" style="background:#2a2a2a;color:#888" onclick="setRegStatus('${r.email}','pending')">↩</button>`;
+    const wa='55'+(r.phone||'').replace(/\D/g,'');
+    const extras=[];
+    if(r.compShirt) extras.push(`Cam.Fem ${r.compShirtSize}`);
+    if(r.compCup)   extras.push('Copo');
+    return `<tr>
+      <td><a href="https://wa.me/${wa}" target="_blank" style="color:var(--gold);text-decoration:none">${r.email}</a></td>
+      <td><strong>${r.name||'—'}</strong></td><td>${r.rank||'—'}</td><td>${r.club||'—'}</td><td>${r.chapter||'—'}</td>
+      <td>${r.country||'—'}</td><td style="text-align:center">${r.shirtSize||'—'}</td>
+      <td>${r.flightDate||'—'}<br><small style="color:#666">${r.flightNum||''}</small></td>
+      <td>${r.arrivalDate||'—'}</td><td>${r.arrivalTime||'—'}</td>
+      <td>${meth[r.arrivalMethod]||r.arrivalMethod||'—'}</td>
+      <td>${r.departDate||'—'}<br><small style="color:#666">${r.departNum||''}</small></td>
+      <td>${r.companion?`✅ ${r.companion.name}`:'—'}</td>
+      <td>${extras.length?extras.join('<br>'):'—'}</td>
+      <td style="text-align:center">${r.kitQty||0}×</td>
+      <td style="color:var(--gold-light);font-weight:700">R$&nbsp;${r.kitTotal||0}</td>
+      <td>${badge}</td>
+      <td><div class="actions">${toggle}
+        <button class="btn btn-danger btn-sm" onclick="deleteReg('${r.email}')">✕</button>
+      </div></td></tr>`;
+  }).join('');
+}
+
+function setRegStatus(email,status) {
+  const all=LS.regs(); const i=all.findIndex(r=>r.email===email);
+  if(i>=0){ all[i].status=status; LS.saveRegs(all); renderAdminDashboard(); }
+}
+function deleteReg(email) {
+  if(!confirm(`Excluir inscrição de ${email}?`)) return;
+  LS.saveRegs(LS.regs().filter(r=>r.email!==email)); renderAdminDashboard();
+}
+
+// ══════════════════════════════════════════
+//  EXPORT CSV
+// ══════════════════════════════════════════
+function exportCSV() {
+  const meth={train:'Train/Trem',plane:'Plane/Avião',car:'Car/Carro',moto:'Moto',balloon:'Balloon/Balão'};
+  const heads=['E-mail','Nome/Name','Graduação/Rank','Moto Clube/Moto Club','Chapter','País/Country',
+    'Tel','Passaporte/Passport','Tam./Size','Data Voo/Flight Date','Nº Voo/Flight No.',
+    'Chegada MCH/Munich Arrival','Hora/Time','Meio/Mode','Voo Retorno/Return Flight',
+    'Acomp./Companion','Nome Acomp.','Clube Acomp.','Tel Acomp.','Pass. Acomp.',
+    'Cam.Fem.','Tam.Fem.','Copo/Cup','Kits','Extras R$','Total R$','Status','Data Inscrição','Obs.'];
+  const rows=LS.regs().map(r=>[
+    r.email,r.name||'',r.rank||'',r.club||'',r.chapter||'',r.country||'',r.phone||'',r.passport||'',r.shirtSize||'',
+    r.flightDate||'',r.flightNum||'',r.arrivalDate||'',r.arrivalTime||'',
+    meth[r.arrivalMethod]||r.arrivalMethod||'',`${r.departDate||''}${r.departNum?' '+r.departNum:''}`,
+    r.companion?'Sim/Yes':'Não/No',r.companion?.name||'',r.companion?.club||'',
+    r.companion?.phone||'',r.companion?.passport||'',
+    r.compShirt?'Sim/Yes':'Não/No',r.compShirtSize||'',r.compCup?'Sim/Yes':'Não/No',
+    r.kitQty||0,r.kitExtra||0,r.kitTotal||0,
+    r.status==='paid'?'Pago/Paid':r.status==='pending'?'Pendente/Pending':'Incompleto',
+    r.createdAt?new Date(r.createdAt).toLocaleDateString('pt-BR'):'',
+    (r.notes||'').replace(/\n/g,' ')
+  ]);
+  const csv=[heads,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`LEMC_Munich_2026_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════
+//  GENERATE PDF
+// ══════════════════════════════════════════
+function generatePDF() {
+  if (!window.jspdf) { alert('PDF library not loaded. Check internet connection.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+
+  const filtered = getFilteredRegs();
+  const search   = document.getElementById('a-search')?.value||'';
+  const statusF  = document.getElementById('a-status')?.value||'';
+  const chapF    = document.getElementById('a-chapter')?.value||'';
+  const meth     = {train:'Trem',plane:'Avião',car:'Carro',moto:'Moto',balloon:'Balão'};
+
+  // ── Header bar
+  doc.setFillColor(10,10,10);
+  doc.rect(0,0,297,22,'F');
+  doc.setFillColor(201,168,76);
+  doc.rect(0,22,297,1,'F');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(16); doc.setTextColor(201,168,76);
+  doc.text('LEMC · 8th International Meeting · Munich 2026', 14, 14);
+
+  doc.setFontSize(8); doc.setTextColor(160,160,160);
+  doc.text(`Gerado em / Generated: ${new Date().toLocaleString('pt-BR')}`, 14, 20);
+
+  // ── Active filters info
+  let filterInfo = [];
+  if (search)  filterInfo.push(`Busca: "${search}"`);
+  if (statusF) filterInfo.push(`Status: ${statusF}`);
+  if (chapF)   filterInfo.push(`Moto Clube: ${chapF}`);
+  if (filterInfo.length) {
+    doc.setFontSize(7.5); doc.setTextColor(201,168,76);
+    doc.text('Filtros: ' + filterInfo.join(' | '), 14, 26.5);
+  }
+
+  // ── Stats row
+  const all    = LS.regs();
+  const paid   = filtered.filter(r=>r.status==='paid');
+  const kits   = filtered.reduce((s,r)=>s+(r.kitQty||0),0);
+  const totVal = filtered.reduce((s,r)=>s+(r.kitTotal||0),0);
+  const recv   = paid.reduce((s,r)=>s+(r.kitTotal||0),0);
+
+  const stats = [
+    [`${filtered.length}`, 'Inscrições'],
+    [`${kits}`, 'Kits'],
+    [`${filtered.filter(r=>r.companion).length}`, 'Com Acomp.'],
+    [`${paid.length}`, 'Confirmados'],
+    [`R$ ${totVal}`, 'Total Previsto'],
+    [`R$ ${recv}`, 'Total Recebido'],
+  ];
+  const sw = 40, sh = 14, sx0 = 14, sy = 30;
+  stats.forEach(([num, lbl], i) => {
+    const x = sx0 + i * (sw + 3);
+    doc.setFillColor(26,26,26); doc.roundedRect(x, sy, sw, sh, 2, 2, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(201,168,76);
+    doc.text(num, x + sw/2, sy + 6, { align:'center' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(140,140,140);
+    doc.text(lbl, x + sw/2, sy + 11, { align:'center' });
+  });
+
+  // ── Table
+  const head = [['Nome','Graduação','Moto Clube','Chapter','País','Tam.','Voo Chegada','Data MCH','Hora','Meio','Acomp.','Extras','Kits','Total','Status']];
+  const body = filtered.map(r => {
+    const extras = [];
+    if (r.compShirt) extras.push(`Cam.F ${r.compShirtSize}`);
+    if (r.compCup)   extras.push('Copo');
+    return [
+      r.name||'—', r.rank||'—', r.club||'—', r.chapter||'—', r.country||'—', r.shirtSize||'—',
+      `${r.flightDate||'—'}\n${r.flightNum||''}`.trim(),
+      r.arrivalDate||'—', r.arrivalTime||'—',
+      meth[r.arrivalMethod]||r.arrivalMethod||'—',
+      r.companion ? r.companion.name : '—',
+      extras.join(', ')||'—',
+      `${r.kitQty||0}×`,
+      `R$ ${r.kitTotal||0}`,
+      r.status==='paid'?'Pago':r.status==='pending'?'Pendente':'Incompl.'
+    ];
+  });
+
+  doc.autoTable({
+    head, body,
+    startY: sy + sh + 4,
+    styles: { fontSize:7, cellPadding:2, overflow:'linebreak' },
+    headStyles: { fillColor:[201,168,76], textColor:[0,0,0], fontStyle:'bold', fontSize:7 },
+    alternateRowStyles: { fillColor:[22,22,22] },
+    bodyStyles: { fillColor:[26,26,26], textColor:[220,220,220] },
+    columnStyles: { 0:{cellWidth:28}, 1:{cellWidth:18}, 2:{cellWidth:28}, 3:{cellWidth:16},
+      4:{cellWidth:10}, 5:{cellWidth:22}, 6:{cellWidth:18}, 7:{cellWidth:12},
+      8:{cellWidth:14}, 9:{cellWidth:22}, 10:{cellWidth:18}, 11:{cellWidth:10},
+      12:{cellWidth:14}, 13:{cellWidth:16} },
+    margin:{ left:14, right:14 },
+    didDrawPage: (data) => {
+      // Footer
+      const pg = doc.internal.getCurrentPageInfo().pageNumber;
+      const total = doc.internal.getNumberOfPages();
+      doc.setFontSize(7); doc.setTextColor(100);
+      doc.text(`LEMC · 8th International Meeting · Munich 2026 · Pág. ${pg}/${total}`,
+        doc.internal.pageSize.width/2, doc.internal.pageSize.height-5, {align:'center'});
+    }
+  });
+
+  doc.save(`LEMC_Munich_2026_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ══════════════════════════════════════════
+//  PIX
+// ══════════════════════════════════════════
+function openPixModal() { document.getElementById('pix-input').value=LS.pix(); openModal('pix-modal'); }
+function savePix() { const v=document.getElementById('pix-input').value.trim(); if(v) LS.savePix(v); closeModal('pix-modal'); }
+function copyPix() {
+  const el=document.getElementById('modal-pix');
+  navigator.clipboard.writeText(el.textContent).then(()=>{ const o=el.textContent; el.textContent='✓ Copiado / Copied!'; setTimeout(()=>el.textContent=o,1500); });
+}
+
+// ══════════════════════════════════════════
+//  CLUBS
+// ══════════════════════════════════════════
+function openClubsModal() { brasaoDataUrl=''; resetBrasao(); renderClubsMgmt(); openModal('clubs-modal'); }
+function resetBrasao() { document.getElementById('brasao-file').value=''; document.getElementById('brasao-preview').style.display='none'; brasaoDataUrl=''; }
+function previewBrasao(input) {
+  if (!input.files||!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ brasaoDataUrl=e.target.result; const p=document.getElementById('brasao-preview'); p.src=brasaoDataUrl; p.style.display='block'; };
+  reader.readAsDataURL(input.files[0]);
+}
+function addClub() {
+  const name=document.getElementById('club-name-in').value.trim();
+  const country=document.getElementById('club-country-in').value.trim();
+  if (!name) return;
+  const clubs=LS.clubs(); clubs.push({ brasao:brasaoDataUrl, flag:'🏍️', name, country });
+  LS.saveClubs(clubs);
+  document.getElementById('club-name-in').value=''; document.getElementById('club-country-in').value='';
+  resetBrasao(); renderClubsMgmt(); renderClubs();
+}
+function removeClub(i) { const c=LS.clubs(); c.splice(i,1); LS.saveClubs(c); renderClubsMgmt(); renderClubs(); }
+function renderClubsMgmt() {
+  const clubs=LS.clubs(), el=document.getElementById('clubs-mgmt-list');
+  if (!clubs.length) { el.innerHTML='<p style="color:var(--muted);padding:10px;font-size:.84em">Nenhum clube / No clubs.</p>'; return; }
+  el.innerHTML=clubs.map((c,i)=>{
+    const img=c.brasao?`<img src="${c.brasao}" style="width:32px;height:32px;object-fit:contain;border-radius:3px;border:1px solid #333;background:#000">`:`<span style="font-size:1.3em">${c.flag||'🏍️'}</span>`;
+    return `<div style="display:flex;align-items:center;gap:9px;padding:7px 5px;border-bottom:1px solid var(--border)">
+      ${img}<span style="flex:1;font-size:.87em">${c.name}</span>
+      <span style="font-size:.76em;color:var(--muted);min-width:60px">${c.country}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeClub(${i})">✕</button></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('show'); }));
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+applyLang(); rebuildShirtSelects();
+</script>
+</body>
+</html>
