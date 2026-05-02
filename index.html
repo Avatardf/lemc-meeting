@@ -276,12 +276,14 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
 
 <!-- ══════════════ AUTH ══════════════ -->
 <div id="screen-auth">
-  <button class="lang-btn lang-auth" onclick="toggleLang()">🇬🇧 EN</button>
   <img src="evento.png" class="auth-poster" alt="" onerror="this.style.display='none'">
   <div class="auth-logo">
     <h1>LEMC</h1>
     <div class="sub1">8th International Meeting</div>
     <div class="sub2">Munich · Germany · 2026</div>
+    <div style="margin-top:12px">
+      <button class="lang-btn" onclick="toggleLang()">🇧🇷 PT</button>
+    </div>
   </div>
   <div class="auth-box">
     <div class="auth-tabs">
@@ -955,7 +957,7 @@ const DEFAULT_KIT_ITEMS = [
 // ══════════════════════════════════════════
 //  I18N
 // ══════════════════════════════════════════
-let currentLang = localStorage.getItem('lemc_lang') || 'pt';
+let currentLang = localStorage.getItem('lemc_lang') || 'en';
 
 const TRANS = {
   pt: {
