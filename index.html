@@ -362,7 +362,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
             <div class="ev-item"><div class="ev-icon">🏍️</div>
               <div class="ev-label" data-i18n="ev.event"></div><div class="ev-val" data-i18n="ev.intl"></div></div>
             <div class="ev-item"><div class="ev-icon">🎽</div>
-              <div class="ev-label" data-i18n="ev.kit"></div><div class="ev-val">R$ 72,00</div></div>
+              <div class="ev-label" data-i18n="ev.kit"></div><div class="ev-val" id="home-kit-price">R$ 72,00</div></div>
           </div>
         </div>
         <div class="event-hero-img">
@@ -1295,6 +1295,7 @@ async function launchApp() {
   document.getElementById('nav-admin').style.display = isAdmin() ? 'inline-block' : 'none';
   applyLang(); rebuildShirtSelects();
   await seedClubsIfEmpty();
+  await updateKitPricesFromDB();
   await renderClubs(); await loadProfile(); showPage('home');
 }
 
@@ -1945,6 +1946,12 @@ async function updateKitPricesFromDB() {
   window.KIT_PRICE  = kit.reduce((s,k)=>s+(k.price||0),0) || 72;
   window.COMP_SHIRT = extra.find(k=>k.name.toLowerCase().includes('camis'))?.price || 44;
   window.COMP_CUP   = extra.find(k=>k.name.toLowerCase().includes('cop'))?.price || 12;
+  // Update all price displays
+  const fmt = `R$ ${window.KIT_PRICE},00`;
+  const homeEl = document.getElementById('home-kit-price');
+  if (homeEl) homeEl.textContent = fmt;
+  const kitPageEl = document.getElementById('kit-page-total');
+  if (kitPageEl) kitPageEl.textContent = fmt;
   updateKitUI();
 }
 
