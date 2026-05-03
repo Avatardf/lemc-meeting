@@ -606,6 +606,22 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
             <div class="ktv" id="kit-total">R$ 72,00</div>
           </div>
         </div>
+        <!-- sleeve selector: participant kit -->
+        <div style="margin-top:13px;padding-top:12px;border-top:1px solid var(--border)">
+          <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.sleeve.label"></label>
+          <div class="radio-group">
+            <label class="radio-opt sel" id="sleeve-long-opt" onclick="selectSleeve('long',this)">
+              <input type="radio" name="kit-sleeve"><span class="rdot"></span>
+              <span data-i18n="kit.sleeve.long"></span>
+            </label>
+            <label class="radio-opt" id="sleeve-short-opt" onclick="selectSleeve('short',this)">
+              <input type="radio" name="kit-sleeve"><span class="rdot"></span>
+              <span data-i18n="kit.sleeve.short"></span>
+              <span style="color:var(--success);font-size:.78em;margin-left:5px" data-i18n="kit.sleeve.disc"></span>
+            </label>
+          </div>
+        </div>
+
         <div class="kit-extras" id="kit-extras">
           <div class="extras-title" data-i18n="kit.extras.title"></div>
           <label class="check-opt" id="co-shirt-opt" onclick="toggleCompExtra('shirt')">
@@ -614,12 +630,27 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
               <div data-i18n="kit.shirt"></div>
               <div style="font-size:.8em;color:var(--muted)" data-i18n="kit.shirt.sub"></div>
             </div>
-            <span class="co-price">+ R$ 44,00</span>
+            <span class="co-price" id="co-shirt-price">+ R$ 44,00</span>
           </label>
           <div class="extra-size-row" id="extra-shirt-size-row">
             <div class="form-group" style="max-width:220px;margin-bottom:6px">
               <label data-i18n="kit.femsize"></label>
               <select id="co-shirt-size"></select>
+            </div>
+            <!-- sleeve selector: companion shirt -->
+            <div style="margin-bottom:6px">
+              <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px" data-i18n="kit.sleeve.label"></label>
+              <div class="radio-group">
+                <label class="radio-opt sel" id="comp-sleeve-long-opt" onclick="selectCompSleeve('long',this)">
+                  <input type="radio" name="comp-sleeve"><span class="rdot"></span>
+                  <span data-i18n="kit.sleeve.long"></span>
+                </label>
+                <label class="radio-opt" id="comp-sleeve-short-opt" onclick="selectCompSleeve('short',this)">
+                  <input type="radio" name="comp-sleeve"><span class="rdot"></span>
+                  <span data-i18n="kit.sleeve.short"></span>
+                  <span style="color:var(--success);font-size:.78em;margin-left:5px" data-i18n="kit.sleeve.comp.disc"></span>
+                </label>
+              </div>
             </div>
           </div>
           <label class="check-opt" id="co-cup-opt" onclick="toggleCompExtra('cup')">
@@ -960,7 +991,7 @@ function toDb(r) {
     arrival_method:r.arrivalMethod, arrival_date:r.arrivalDate, arrival_time:r.arrivalTime,
     depart_date:r.departDate, depart_num:r.departNum, companion:r.companion,
     comp_shirt:r.compShirt, comp_shirt_size:r.compShirtSize, comp_cup:r.compCup,
-    kit_qty:r.kitQty, kit_extra:r.kitExtra, kit_total:r.kitTotal,
+    kit_qty:r.kitQty, kit_sleeve:r.kitSleeve, comp_sleeve:r.compSleeve, kit_extra:r.kitExtra, kit_total:r.kitTotal,
     notes:r.notes, status:r.status, created_at:r.createdAt, updated_at:r.updatedAt,
   };
 }
@@ -973,7 +1004,7 @@ function fromDb(r) {
     arrivalMethod:r.arrival_method, arrivalDate:r.arrival_date, arrivalTime:r.arrival_time,
     departDate:r.depart_date, departNum:r.depart_num, companion:r.companion,
     compShirt:r.comp_shirt, compShirtSize:r.comp_shirt_size, compCup:r.comp_cup,
-    kitQty:r.kit_qty, kitExtra:r.kit_extra, kitTotal:r.kit_total,
+    kitQty:r.kit_qty, kitSleeve:r.kit_sleeve, compSleeve:r.comp_sleeve, kitExtra:r.kit_extra, kitTotal:r.kit_total,
     notes:r.notes, status:r.status, createdAt:r.created_at, updatedAt:r.updated_at,
   };
 }
@@ -1094,6 +1125,8 @@ const TRANS = {
     'err.wrongpass':'E-mail ou senha incorretos.',
     'err.compfields':'Preencha nome, telefone e passaporte do acompanhante.',
     'err.femsize':'Selecione o tamanho feminino da camiseta da acompanhante.',
+    'kit.sleeve.label':'Manga da Camiseta', 'kit.sleeve.long':'Manga Longa', 'kit.sleeve.short':'Manga Curta',
+    'kit.sleeve.disc':'−R$5,00 / kit', 'kit.sleeve.comp.disc':'−R$5,00',
     'btn.cancel':'Cancelar',
     'fp.title':'Redefinir Senha', 'fp.sub':'Informe seu e-mail, o código admin e a nova senha.',
     'fp.code':'Código Admin', 'fp.newpass':'Nova Senha (mín. 6 caracteres)', 'fp.confirm':'Confirmar Nova Senha',
@@ -1174,6 +1207,8 @@ const TRANS = {
     'err.wrongpass':'Incorrect e-mail or password.',
     'err.compfields':'Fill in companion name, phone and passport.',
     'err.femsize':"Select the companion's women's shirt size.",
+    'kit.sleeve.label':'T-Shirt Sleeve', 'kit.sleeve.long':'Long Sleeve', 'kit.sleeve.short':'Short Sleeve',
+    'kit.sleeve.disc':'−R$5.00 / kit', 'kit.sleeve.comp.disc':'−R$5.00',
     'btn.cancel':'Cancel',
     'fp.title':'Reset Password', 'fp.sub':'Enter your e-mail, admin code and new password.',
     'fp.code':'Admin Code', 'fp.newpass':'New Password (min. 6 characters)', 'fp.confirm':'Confirm New Password',
@@ -1273,6 +1308,9 @@ let hasCompanion  = false;
 let arrivalMethod = '';
 let compShirt     = false;
 let compCup       = false;
+let kitSleeve     = 'long';
+let compSleeve    = 'long';
+const SLEEVE_DISC = 5;
 let brasaoDataUrl = '';
 
 function isAdmin(){ return currentUser && (ADMIN_EMAILS.includes(currentUser.email) || adminUnlocked); }
@@ -1453,7 +1491,10 @@ async function loadProfile() {
   const banner = document.getElementById('profile-status-banner');
   if (!reg) {
     banner.innerHTML=`<div class="status-banner sb-incomplete">${t('status.empty')}</div>`;
-    kitQty=1; hasCompanion=false; compShirt=false; compCup=false; updateKitUI(); return;
+    kitQty=1; hasCompanion=false; compShirt=false; compCup=false;
+    kitSleeve='long'; compSleeve='long';
+    selectSleeve('long'); selectCompSleeve('long');
+    updateKitUI(); return;
   }
   const sc = { incomplete:'sb-incomplete', pending:'sb-pending', paid:'sb-paid' };
   const sk = { incomplete:'status.incomplete', pending:'status.pending', paid:'status.paid' };
@@ -1485,7 +1526,10 @@ async function loadProfile() {
   if (compShirt) f('co-shirt-size',reg.compShirtSize||'');
   syncCO('co-shirt-opt','co-shirt',compShirt); syncCO('co-cup-opt','co-cup',compCup);
   document.getElementById('extra-shirt-size-row').classList.toggle('show',compShirt);
-  kitQty=reg.kitQty||1; updateKitUI();
+  kitQty=reg.kitQty||1;
+  selectSleeve(reg.kitSleeve||'long');
+  selectCompSleeve(reg.compSleeve||'long');
+  updateKitUI();
 }
 function syncCO(optId,cbId,state) {
   document.getElementById(optId).classList.toggle('sel',state);
@@ -1516,15 +1560,33 @@ function toggleCompExtra(type) {
   updateKitUI();
 }
 function changeKitQty(d) { kitQty=Math.max(1,Math.min(10,kitQty+d)); updateKitUI(); }
+function selectSleeve(val, el) {
+  kitSleeve = val;
+  document.getElementById('sleeve-long-opt').classList.toggle('sel', val==='long');
+  document.getElementById('sleeve-short-opt').classList.toggle('sel', val==='short');
+  updateKitUI();
+}
+function selectCompSleeve(val, el) {
+  compSleeve = val;
+  document.getElementById('comp-sleeve-long-opt').classList.toggle('sel', val==='long');
+  document.getElementById('comp-sleeve-short-opt').classList.toggle('sel', val==='short');
+  updateKitUI();
+}
 function updateKitUI() {
-  const extra = (hasCompanion&&compShirt?COMP_SHIRT:0)+(hasCompanion&&compCup?COMP_CUP:0);
-  const total = kitQty*KIT_PRICE + extra;
-  document.getElementById('kit-qty').textContent=kitQty;
-  let bd=`${kitQty} kit${kitQty>1?'s':''} × R$ ${KIT_PRICE},00`;
-  if (hasCompanion&&compShirt) bd+=` · ${currentLang==='en'?"Women's shirt":"Cam.Fem."} R$ ${COMP_SHIRT},00`;
-  if (hasCompanion&&compCup)   bd+=` · ${currentLang==='en'?'Cup':'Copo'} R$ ${COMP_CUP},00`;
-  document.getElementById('kit-breakdown').textContent=bd;
-  document.getElementById('kit-total').textContent=`R$ ${total},00`;
+  const kitUnitPrice  = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
+  const compShirtPrice = COMP_SHIRT - (compSleeve==='short' ? SLEEVE_DISC : 0);
+  const extra = (hasCompanion&&compShirt ? compShirtPrice : 0) + (hasCompanion&&compCup ? COMP_CUP : 0);
+  const total = kitQty * kitUnitPrice + extra;
+  document.getElementById('kit-qty').textContent = kitQty;
+  const unitEl = document.getElementById('kit-unit-price');
+  if (unitEl) unitEl.textContent = `R$ ${kitUnitPrice},00 / kit`;
+  const coShirtPriceEl = document.getElementById('co-shirt-price');
+  if (coShirtPriceEl) coShirtPriceEl.textContent = `+ R$ ${compShirtPrice},00`;
+  let bd = `${kitQty} kit${kitQty>1?'s':''} × R$ ${kitUnitPrice},00`;
+  if (hasCompanion&&compShirt) bd += ` · ${currentLang==='en'?"Women's shirt":"Cam.Fem."} R$ ${compShirtPrice},00`;
+  if (hasCompanion&&compCup)   bd += ` · ${currentLang==='en'?'Cup':'Copo'} R$ ${COMP_CUP},00`;
+  document.getElementById('kit-breakdown').textContent = bd;
+  document.getElementById('kit-total').textContent = `R$ ${total},00`;
 }
 
 // ══════════════════════════════════════════
@@ -1557,13 +1619,15 @@ async function saveProfile() {
   if (compShirt&&!compShirtSize){ div.innerHTML=`<div class="alert alert-e">${t('err.femsize')}</div>`;
     div.scrollIntoView({behavior:'smooth',block:'center'}); return; }
   div.innerHTML='';
-  const kitExtra=(hasCompanion&&compShirt?COMP_SHIRT:0)+(hasCompanion&&compCup?COMP_CUP:0);
-  const kitTotal=kitQty*KIT_PRICE+kitExtra;
+  const kitUnitPrice   = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
+  const compShirtPrice = COMP_SHIRT - (compSleeve==='short' ? SLEEVE_DISC : 0);
+  const kitExtra=(hasCompanion&&compShirt?compShirtPrice:0)+(hasCompanion&&compCup?COMP_CUP:0);
+  const kitTotal=kitQty*kitUnitPrice+kitExtra;
   const existing = await DB.getReg(currentUser.email);
   const reg={ email:currentUser.email, name, rank, club, chapter, country, phone, passport, shirtSize,
     flightDate, flightNum, arrivalMethod, arrivalDate, arrivalTime, departDate, departNum,
     companion, compShirt:hasCompanion&&compShirt, compShirtSize, compCup:hasCompanion&&compCup,
-    kitQty, kitExtra, kitTotal, notes,
+    kitQty, kitSleeve, compSleeve, kitExtra, kitTotal, notes,
     status:existing?.status||'pending',
     createdAt:existing?.createdAt||new Date().toISOString(),
     updatedAt:new Date().toISOString() };
