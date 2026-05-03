@@ -710,7 +710,21 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           </div>
         </div>
 
-        <div class="card" style="padding:13px 18px">
+        <!-- ── ADMIN TABS ── -->
+        <div style="display:flex;gap:6px;margin-bottom:2px">
+          <button id="atab-regs" onclick="switchAdminTab('regs')"
+            class="btn btn-primary btn-sm" style="border-radius:6px 6px 0 0;padding:7px 18px">
+            📋 Inscrições
+          </button>
+          <button id="atab-users" onclick="switchAdminTab('users')"
+            class="btn btn-secondary btn-sm" style="border-radius:6px 6px 0 0;padding:7px 18px;border-bottom:none">
+            👤 Usuários
+          </button>
+        </div>
+
+        <!-- ── REGISTRATIONS TAB ── -->
+        <div id="admin-tab-regs">
+        <div class="card" style="padding:13px 18px;border-radius:0 6px 6px 6px">
           <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end">
             <div class="form-group" style="margin:0;flex:1;min-width:150px">
               <label>Buscar / Search</label>
@@ -740,7 +754,7 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
             </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" style="border-radius:0 0 6px 6px;margin-top:0;border-top:none">
           <div class="card-title">Inscrições / Registrations (<span id="reg-count">0</span>)</div>
           <div class="table-wrap">
             <table class="reg-table">
@@ -757,6 +771,16 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
             </table>
           </div>
         </div>
+        </div><!-- /admin-tab-regs -->
+
+        <!-- ── USERS TAB ── -->
+        <div id="admin-tab-users" style="display:none">
+        <div class="card" style="border-radius:0 6px 6px 6px;margin-top:0;border-top:none">
+          <div class="card-title">👤 Usuários / Logins</div>
+          <div id="users-tab-content"><p style="color:var(--muted);padding:12px">Carregando…</p></div>
+        </div>
+        </div><!-- /admin-tab-users -->
+
       </div>
     </div>
 
@@ -943,6 +967,8 @@ const DB = {
   async upsertKitItem(it)  { await sb.from('kit_items').upsert(it,{onConflict:'id'}); },
   async insertKitItem(it)  { await sb.from('kit_items').insert(it); },
   async deleteKitItem(id)  { await sb.from('kit_items').delete().eq('id',id); },
+  async loginLogs()        { const {data}=await sb.from('login_logs').select('*').order('logged_at',{ascending:false}); return data||[]; },
+  async insertLoginLog(r)  { await sb.from('login_logs').insert(r); },
 };
 
 const DEFAULT_KIT_ITEMS = [
@@ -1227,7 +1253,9 @@ async function doLogin() {
     return;
   }
   if (byEmail.hash!==hash){ div.innerHTML=`<div class="alert alert-e">${t('err.wrongpass')}</div>`; return; }
-  currentUser = { email }; launchApp();
+  currentUser = { email };
+  recordLoginLog(email);
+  launchApp();
 }
 
 function openForgotModal() {
@@ -1293,7 +1321,9 @@ async function doRegister() {
   if (users.find(u=>u.email===email)){ div.innerHTML=`<div class="alert alert-e">${t('err.emailtaken')}</div>`; return; }
   const hash = await sha256(email+pass);
   await DB.upsertUser({ email, hash, created_at:new Date().toISOString() });
-  currentUser = { email }; launchApp();
+  currentUser = { email };
+  recordLoginLog(email);
+  launchApp();
 }
 
 function doLogout() {
@@ -1516,6 +1546,19 @@ function unlockAdmin() {
 //  ADMIN – DASHBOARD
 // ══════════════════════════════════════════
 async function renderAdminDashboard() { await renderStats(); await renderAdminTable(); }
+
+function switchAdminTab(tab) {
+  const isRegs = tab === 'regs';
+  document.getElementById('admin-tab-regs').style.display  = isRegs ? 'block' : 'none';
+  document.getElementById('admin-tab-users').style.display = isRegs ? 'none'  : 'block';
+  const btnRegs  = document.getElementById('atab-regs');
+  const btnUsers = document.getElementById('atab-users');
+  btnRegs.className  = `btn btn-sm ${isRegs  ? 'btn-primary'   : 'btn-secondary'}`;
+  btnUsers.className = `btn btn-sm ${!isRegs ? 'btn-primary'   : 'btn-secondary'}`;
+  btnRegs.style.cssText  = 'border-radius:6px 6px 0 0;padding:7px 18px';
+  btnUsers.style.cssText = 'border-radius:6px 6px 0 0;padding:7px 18px';
+  if (!isRegs) renderUsersTab();
+}
 
 async function renderStats() {
   const all=await DB.regs(), paid=all.filter(r=>r.status==='paid');
@@ -1989,6 +2032,52 @@ async function updateKitPricesFromDB() {
   const unitEl = document.getElementById('kit-unit-price');
   if (unitEl) unitEl.textContent = `${fmt} / kit`;
   updateKitUI();
+}
+
+// ══════════════════════════════════════════
+//  LOGIN LOG
+// ══════════════════════════════════════════
+async function fetchGeoInfo() {
+  try {
+    const r = await Promise.race([
+      fetch('https://ipapi.co/json/').then(r=>r.json()),
+      new Promise((_,rej)=>setTimeout(()=>rej(),5000))
+    ]);
+    return { ip:r.ip||'', city:r.city||'', country:r.country_name||'' };
+  } catch { return { ip:'', city:'', country:'' }; }
+}
+
+function recordLoginLog(email) {
+  fetchGeoInfo().then(geo => {
+    DB.insertLoginLog({ email, ip:geo.ip, city:geo.city, country:geo.country,
+      logged_at: new Date().toISOString() });
+  });
+}
+
+async function renderUsersTab() {
+  const logs = await DB.loginLogs();
+  const el = document.getElementById('users-tab-content');
+  if (!logs.length) {
+    el.innerHTML='<p style="color:var(--muted);padding:16px;text-align:center">Nenhum login registrado.</p>';
+    return;
+  }
+  el.innerHTML=`<div class="table-wrap"><table class="reg-table">
+    <thead><tr>
+      <th>E-mail</th><th>IP</th><th>Cidade / City</th><th>País / Country</th><th>Data / Date</th>
+    </tr></thead>
+    <tbody>${logs.map(l=>{
+      const dt = l.logged_at ? new Date(l.logged_at) : null;
+      const date = dt ? dt.toLocaleDateString(currentLang==='en'?'en-GB':'pt-BR') : '—';
+      const time = dt ? dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<tr>
+        <td style="color:var(--gold)">${l.email}</td>
+        <td style="font-family:monospace;font-size:.82em">${l.ip||'—'}</td>
+        <td>${l.city||'—'}</td>
+        <td>${l.country||'—'}</td>
+        <td>${date}${time?' · '+time:''}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
 }
 
 // ══════════════════════════════════════════
