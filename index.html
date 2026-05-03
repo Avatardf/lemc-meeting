@@ -250,6 +250,12 @@ main { max-width:980px; margin:26px auto; padding:0 15px; }
 .extras-add-row:last-child { border-bottom:none; }
 .extras-add-row .ear-name { flex:1; font-size:.9em; }
 .extras-add-row .ear-price { color:var(--gold-light); font-size:.85em; white-space:nowrap; }
+.extras-add-shirt { flex-direction:column; align-items:stretch; gap:7px; }
+.ear-shirt-info { display:flex; align-items:center; gap:8px; }
+.ear-shirt-info .ear-name { flex:1; }
+.ear-shirt-controls { display:flex; align-items:center; gap:8px; }
+.ear-size-sel { flex:1; background:#1a1a1a; border:1px solid var(--border); color:var(--fg);
+  padding:5px 8px; border-radius:5px; font-size:.84em; min-width:0; }
 .cart-item-row { display:flex; align-items:flex-start; justify-content:space-between;
   gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
 .cart-item-row:last-child { border-bottom:none; }
@@ -1140,8 +1146,9 @@ const DEFAULT_KIT_ITEMS = [
   { name:'Copo com Tirante',        name_en:'Cup with Strap',         description:'Copo oficial com tirante de couro sintético para uso durante o evento.', description_en:'Official cup with synthetic leather strap for use during the event.', image:'', price:12, category:'kit',   sort_order:2, active:true },
   { name:'Ficha de Poler',          name_en:'Poker Chip',             description:'Ficha personalizada do 8th International Meeting Munich 2026 para uso na mesa de poler.', description_en:'Custom poker chip for the 8th International Meeting Munich 2026.', image:'', price:4,  category:'kit',   sort_order:3, active:true },
   { name:'Mochila',                 name_en:'Backpack',               description:'Mochila oficial do evento com logo bordado e compartimentos práticos para o dia do encontro.', description_en:'Official event backpack with embroidered logo and practical compartments.', image:'', price:12, category:'kit',   sort_order:4, active:true },
-  { name:'Camiseta Feminina',       name_en:"Women's T-Shirt",        description:'Camiseta oficial feminina manga longa, disponível para acompanhantes.', description_en:"Official women's long sleeve t-shirt, available for companions.", image:'', price:44, category:'extra',  sort_order:5, active:true },
-  { name:'Copo Acompanhante',       name_en:'Companion Cup',          description:'Copo oficial com tirante para acompanhante.', description_en:'Official cup with strap for companion.', image:'', price:12, category:'extra',  sort_order:6, active:true },
+  { name:'Camiseta Feminina',       name_en:"Women's T-Shirt",        description:'Camiseta oficial feminina, disponível para acompanhantes.', description_en:"Official women's t-shirt, available for companions.", image:'', price:44, category:'extra',  sort_order:5, active:true },
+  { name:'Camiseta Masculina',      name_en:"Men's T-Shirt",          description:'Camiseta oficial masculina adicional.', description_en:"Additional official men's t-shirt.", image:'', price:45, category:'extra',  sort_order:6, active:true },
+  { name:'Copo Acompanhante',       name_en:'Companion Cup',          description:'Copo oficial com tirante para acompanhante.', description_en:'Official cup with strap for companion.', image:'', price:12, category:'extra',  sort_order:7, active:true },
 ];
 
 // ══════════════════════════════════════════
@@ -2103,34 +2110,87 @@ function updateKitOrderUnitPrice() {
   document.getElementById('kit-order-unit-price').textContent = `R$ ${unitPrice},00 / kit`;
 }
 
+const SHIRT_SIZES = ['PP','P','M','G','GG','XGG'];
+
 function renderKitOrderExtras() {
   const extras = kitItemsCache.filter(k => k.category === 'extra' && k.active);
   const isEn = currentLang === 'en';
-  const html = extras.map(e => {
-    const name = (isEn && e.name_en) ? e.name_en : e.name;
-    return `<div class="extras-add-row">
-      <span class="ear-name">${name}</span>
-      <span class="ear-price">R$ ${e.price||0},00</span>
-      <button class="btn btn-sm btn-secondary" style="padding:4px 12px;font-size:.8em" onclick="addToKitCart(${e.id})">${t('kit.order.add')}</button>
-    </div>`;
-  }).join('');
-  document.getElementById('kit-order-extras-list').innerHTML = html || `<p style="color:var(--muted);font-size:.85em">—</p>`;
+  const rows = [];
+  extras.forEach(e => {
+    const baseName = (isEn && e.name_en) ? e.name_en : e.name;
+    const isShirt = !!itemIsShirt(e);
+    if (isShirt) {
+      const sleeves = [
+        { sl:'long',  label: t('kit.sleeve.long'),  price: e.price||0 },
+        { sl:'short', label: t('kit.sleeve.short'), price: (e.price||0) - SLEEVE_DISC },
+      ];
+      const sizeOpts = `<option value="">${t('opt.select')}</option>` +
+        SHIRT_SIZES.map(s=>`<option value="${s}">${s}</option>`).join('');
+      sleeves.forEach(({ sl, label, price }) => {
+        const uid = `ear-${e.id}-${sl}`;
+        rows.push(`<div class="extras-add-row extras-add-shirt">
+          <div class="ear-shirt-info">
+            <span class="ear-name">${baseName} – ${label}</span>
+            <span class="ear-price">R$ ${price},00</span>
+          </div>
+          <div class="ear-shirt-controls">
+            <select id="${uid}-size" class="ear-size-sel">
+              ${sizeOpts}
+            </select>
+            <button class="btn btn-sm btn-secondary" style="padding:4px 12px;font-size:.8em;white-space:nowrap"
+              onclick="addToKitCart(${e.id},'${sl}',document.getElementById('${uid}-size').value)">
+              ${t('kit.order.add')}
+            </button>
+          </div>
+        </div>`);
+      });
+    } else {
+      rows.push(`<div class="extras-add-row">
+        <span class="ear-name">${baseName}</span>
+        <span class="ear-price">R$ ${e.price||0},00</span>
+        <button class="btn btn-sm btn-secondary" style="padding:4px 12px;font-size:.8em"
+          onclick="addToKitCart(${e.id},null,null)">${t('kit.order.add')}</button>
+      </div>`);
+    }
+  });
+  document.getElementById('kit-order-extras-list').innerHTML =
+    rows.join('') || `<p style="color:var(--muted);font-size:.85em">—</p>`;
 }
 
-function addToKitCart(itemId) {
+function addToKitCart(itemId, sleeve, size) {
   const item = kitItemsCache.find(k => k.id === itemId);
   if (!item) return;
   const isShirt = !!itemIsShirt(item);
+  if (isShirt && !size) {
+    const uid = `ear-${itemId}-${sleeve}-size`;
+    const sel = document.getElementById(uid);
+    if (sel) { sel.style.outline = '2px solid var(--red)'; setTimeout(()=>sel.style.outline='',2000); }
+    document.getElementById('kit-order-alert').innerHTML =
+      `<div class="alert alert-e">${t('kit.order.err.size')}</div>`;
+    setTimeout(()=>document.getElementById('kit-order-alert').innerHTML='', 3000);
+    return;
+  }
+  const disc = sleeve === 'short' ? SLEEVE_DISC : 0;
+  const isEn = currentLang === 'en';
+  const baseName = (isEn && item.name_en) ? item.name_en : item.name;
+  const sleeveLabel = sleeve ? (sleeve === 'long' ? t('kit.sleeve.long') : t('kit.sleeve.short')) : '';
+  const displayName = isShirt ? `${baseName} – ${sleeveLabel}` : baseName;
+  const displayNameEn = isShirt
+    ? `${item.name_en||item.name} – ${sleeve==='long'?'Long Sleeve':'Short Sleeve'}`
+    : (item.name_en||item.name);
   kitCart.push({
     id: item.id,
-    name: item.name,
-    nameEn: item.name_en||'',
+    name: displayName,
+    nameEn: displayNameEn,
     price: item.price||0,
-    hasSleeve: isShirt,
-    hasSize: isShirt,
-    sleeve: 'long',
-    size: '',
+    sleeve: sleeve||null,
+    size: size||'',
+    isShirt,
   });
+  // reset the size select
+  const resetSel = document.getElementById(`ear-${itemId}-${sleeve}-size`);
+  if (resetSel) resetSel.value = '';
+  document.getElementById('kit-order-alert').innerHTML = '';
   renderKitCart();
   updateKitOrderTotal();
 }
@@ -2141,18 +2201,6 @@ function removeFromKitCart(idx) {
   updateKitOrderTotal();
 }
 
-function updateCartItem(idx, field, val) {
-  if (!kitCart[idx]) return;
-  kitCart[idx][field] = val;
-  if (field === 'sleeve') {
-    const longBtn  = document.getElementById(`cart-sl-long-${idx}`);
-    const shortBtn = document.getElementById(`cart-sl-short-${idx}`);
-    if (longBtn)  longBtn.classList.toggle('sel', val==='long');
-    if (shortBtn) shortBtn.classList.toggle('sel', val==='short');
-  }
-  updateKitOrderTotal();
-}
-
 function renderKitCart() {
   const container = document.getElementById('kit-order-cart');
   if (!kitCart.length) {
@@ -2160,36 +2208,19 @@ function renderKitCart() {
     return;
   }
   const isEn = currentLang === 'en';
-  const SIZES = ['PP','P','M','G','GG','XGG'];
   container.innerHTML = kitCart.map((item, idx) => {
     const name = (isEn && item.nameEn) ? item.nameEn : item.name;
     const disc = item.sleeve === 'short' ? SLEEVE_DISC : 0;
     const price = item.price - disc;
-    const sizeCtrl = item.hasSize
-      ? `<select onchange="updateCartItem(${idx},'size',this.value)">
-           <option value="">${t('opt.select')}</option>
-           ${SIZES.map(s=>`<option value="${s}" ${item.size===s?'selected':''}>${s}</option>`).join('')}
-         </select>`
-      : '';
-    const sleeveCtrl = item.hasSleeve
-      ? `<label class="radio-opt ${item.sleeve==='long'?'sel':''}" id="cart-sl-long-${idx}" onclick="updateCartItem(${idx},'sleeve','long')" style="padding:4px 10px;font-size:.8em">
-           <input type="radio" name="cart-sl-${idx}"><span class="rdot"></span><span>${t('kit.sleeve.long')}</span>
-         </label>
-         <label class="radio-opt ${item.sleeve==='short'?'sel':''}" id="cart-sl-short-${idx}" onclick="updateCartItem(${idx},'sleeve','short')" style="padding:4px 10px;font-size:.8em">
-           <input type="radio" name="cart-sl-${idx}"><span class="rdot"></span><span>${t('kit.sleeve.short')}</span>
-           <span style="color:var(--success);font-size:.78em;margin-left:4px">−R$5</span>
-         </label>`
-      : '';
+    const meta = [item.size, item.sleeve ? (item.sleeve==='long'?t('kit.sleeve.long'):t('kit.sleeve.short')) : '']
+      .filter(Boolean).join(' · ');
     return `<div class="cart-item-row">
       <div class="cart-item-info">
         <div class="cart-item-name">${name}</div>
-        <div class="cart-item-controls">
-          ${sizeCtrl}
-          ${sleeveCtrl}
-        </div>
+        ${meta ? `<div style="color:var(--muted);font-size:.8em;margin-top:3px">${meta}</div>` : ''}
       </div>
       <div style="display:flex;align-items:flex-start;gap:8px;flex-shrink:0">
-        <span class="co-price" style="margin-top:2px" id="cart-item-price-${idx}">R$ ${price},00</span>
+        <span class="co-price" style="margin-top:2px">R$ ${price},00</span>
         <button class="cart-rm-btn" onclick="removeFromKitCart(${idx})">×</button>
       </div>
     </div>`;
@@ -2221,7 +2252,7 @@ async function saveKitOrder() {
     alertEl.innerHTML = `<div class="alert alert-e">${t('kit.order.noReg')}</div>`;
     alertEl.scrollIntoView({behavior:'smooth',block:'center'}); return;
   }
-  const missingSize = kitCart.find(item => item.hasSize && !item.size);
+  const missingSize = kitCart.find(item => item.isShirt && !item.size);
   if (missingSize) {
     alertEl.innerHTML = `<div class="alert alert-e">${t('kit.order.err.size')}</div>`;
     alertEl.scrollIntoView({behavior:'smooth',block:'center'}); return;
