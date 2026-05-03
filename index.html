@@ -244,6 +244,25 @@ main { max-width:980px; margin:26px auto; padding:0 15px; }
 .kit-price-bar .kpb-label { color:var(--muted); font-size:.86em; text-transform:uppercase; letter-spacing:1px; }
 .kit-price-bar .kpb-value { color:var(--gold); font-size:2em; font-weight:700; line-height:1; }
 
+/* ── KIT ORDER CART ── */
+.extras-add-row { display:flex; align-items:center; gap:10px; padding:9px 0;
+  border-bottom:1px solid var(--border); }
+.extras-add-row:last-child { border-bottom:none; }
+.extras-add-row .ear-name { flex:1; font-size:.9em; }
+.extras-add-row .ear-price { color:var(--gold-light); font-size:.85em; white-space:nowrap; }
+.cart-item-row { display:flex; align-items:flex-start; justify-content:space-between;
+  gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.cart-item-row:last-child { border-bottom:none; }
+.cart-item-info { flex:1; font-size:.88em; }
+.cart-item-name { font-weight:600; margin-bottom:5px; }
+.cart-item-controls { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center; }
+.cart-item-controls select { background:#1a1a1a; border:1px solid var(--border); color:var(--fg);
+  padding:4px 8px; border-radius:5px; font-size:.82em; }
+.cart-rm-btn { background:transparent; border:1px solid #444; color:var(--muted);
+  width:24px; height:24px; border-radius:4px; cursor:pointer; font-size:1em; line-height:1;
+  flex-shrink:0; margin-top:2px; }
+.cart-rm-btn:hover { border-color:var(--gold); color:var(--gold); }
+
 /* ── ADMIN KIT MANAGEMENT ── */
 .kit-admin-section { display:none; }
 .kit-admin-section.show { display:block; }
@@ -496,6 +515,64 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           <div class="kpb-value" id="kit-page-total">R$ 72,00</div>
         </div>
       </div>
+
+    <!-- ── KIT ORDER ── -->
+    <div class="card" id="kit-order-card" style="display:none">
+      <div class="card-title" data-i18n="kit.order.title"></div>
+
+      <!-- Participant Kit -->
+      <div style="margin-bottom:4px">
+        <div class="extras-title" data-i18n="kit.order.participant.title"></div>
+        <div class="kit-row" style="margin-top:10px">
+          <div>
+            <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.qty.label"></label>
+            <div style="color:var(--muted);font-size:.75em;margin-bottom:5px" id="kit-order-unit-price">R$ 72,00 / kit</div>
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="changeOrderKitQty(-1)">−</button>
+              <span class="qty-num" id="kit-order-qty">1</span>
+              <button class="qty-btn" onclick="changeOrderKitQty(1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div id="kit-order-sleeve-row" style="margin-top:13px;padding-top:12px;border-top:1px solid var(--border)">
+          <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.sleeve.label"></label>
+          <div class="radio-group">
+            <label class="radio-opt sel" id="kit-order-sleeve-long" onclick="selectOrderSleeve('long',this)">
+              <input type="radio" name="kit-order-sleeve"><span class="rdot"></span>
+              <span data-i18n="kit.sleeve.long"></span>
+            </label>
+            <label class="radio-opt" id="kit-order-sleeve-short" onclick="selectOrderSleeve('short',this)">
+              <input type="radio" name="kit-order-sleeve"><span class="rdot"></span>
+              <span data-i18n="kit.sleeve.short"></span>
+              <span style="color:var(--success);font-size:.78em;margin-left:5px" data-i18n="kit.sleeve.disc"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extras -->
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:14px">
+        <div class="extras-title" data-i18n="kit.order.extras.title"></div>
+        <div id="kit-order-extras-list" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Cart -->
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:12px">
+        <div class="extras-title" data-i18n="kit.order.cart.title"></div>
+        <div id="kit-order-cart" style="margin-top:8px"></div>
+      </div>
+
+      <!-- Total -->
+      <div class="kit-price-bar" style="margin-top:18px">
+        <div>
+          <div class="kpb-label" data-i18n="kit.order.total.label"></div>
+        </div>
+        <div class="kpb-value" id="kit-order-total">R$ 0,00</div>
+      </div>
+
+      <div id="kit-order-alert" style="margin-top:8px"></div>
+      <button class="btn btn-primary btn-full" onclick="saveKitOrder()" data-i18n="kit.order.save" style="margin-top:12px;margin-bottom:4px"></button>
+    </div>
     </div>
 
     <!-- ══ PROFILE ══ -->
@@ -669,82 +746,6 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
               <input type="text" id="c-passport" data-i18n-ph="f.passport.ph">
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title" data-i18n="sec.kit"></div>
-        <p style="color:var(--muted);font-size:.86em;margin-bottom:13px" data-i18n="kit.desc"></p>
-        <div class="kit-row">
-          <div>
-            <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.qty.label"></label>
-            <div style="color:var(--muted);font-size:.75em;margin-bottom:5px" id="kit-unit-price">R$ 72,00 / kit</div>
-            <div class="qty-ctrl">
-              <button class="qty-btn" onclick="changeKitQty(-1)">−</button>
-              <span class="qty-num" id="kit-qty">1</span>
-              <button class="qty-btn" onclick="changeKitQty(1)">+</button>
-            </div>
-          </div>
-          <div class="kit-total-wrap">
-            <div class="ktl" id="kit-breakdown">1 kit × R$ 72,00</div>
-            <div class="ktv" id="kit-total">R$ 72,00</div>
-          </div>
-        </div>
-        <!-- sleeve selector: participant kit -->
-        <div style="margin-top:13px;padding-top:12px;border-top:1px solid var(--border)">
-          <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px" data-i18n="kit.sleeve.label"></label>
-          <div class="radio-group">
-            <label class="radio-opt sel" id="sleeve-long-opt" onclick="selectSleeve('long',this)">
-              <input type="radio" name="kit-sleeve"><span class="rdot"></span>
-              <span data-i18n="kit.sleeve.long"></span>
-            </label>
-            <label class="radio-opt" id="sleeve-short-opt" onclick="selectSleeve('short',this)">
-              <input type="radio" name="kit-sleeve"><span class="rdot"></span>
-              <span data-i18n="kit.sleeve.short"></span>
-              <span style="color:var(--success);font-size:.78em;margin-left:5px" data-i18n="kit.sleeve.disc"></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="kit-extras" id="kit-extras">
-          <div class="extras-title" data-i18n="kit.extras.title"></div>
-          <label class="check-opt" id="co-shirt-opt" onclick="toggleCompExtra('shirt')">
-            <input type="checkbox" id="co-shirt"><span class="cbox"></span>
-            <div class="co-label">
-              <div data-i18n="kit.shirt"></div>
-              <div style="font-size:.8em;color:var(--muted)" data-i18n="kit.shirt.sub"></div>
-            </div>
-            <span class="co-price" id="co-shirt-price">+ R$ 44,00</span>
-          </label>
-          <div class="extra-size-row" id="extra-shirt-size-row">
-            <div class="form-group" style="max-width:220px;margin-bottom:6px">
-              <label data-i18n="kit.femsize"></label>
-              <select id="co-shirt-size"></select>
-            </div>
-            <!-- sleeve selector: companion shirt -->
-            <div style="margin-bottom:6px">
-              <label style="display:block;color:var(--gold);font-size:.73em;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px" data-i18n="kit.sleeve.label"></label>
-              <div class="radio-group">
-                <label class="radio-opt sel" id="comp-sleeve-long-opt" onclick="selectCompSleeve('long',this)">
-                  <input type="radio" name="comp-sleeve"><span class="rdot"></span>
-                  <span data-i18n="kit.sleeve.long"></span>
-                </label>
-                <label class="radio-opt" id="comp-sleeve-short-opt" onclick="selectCompSleeve('short',this)">
-                  <input type="radio" name="comp-sleeve"><span class="rdot"></span>
-                  <span data-i18n="kit.sleeve.short"></span>
-                  <span style="color:var(--success);font-size:.78em;margin-left:5px" data-i18n="kit.sleeve.comp.disc"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <label class="check-opt" id="co-cup-opt" onclick="toggleCompExtra('cup')">
-            <input type="checkbox" id="co-cup"><span class="cbox"></span>
-            <div class="co-label">
-              <div data-i18n="kit.cup"></div>
-              <div style="font-size:.8em;color:var(--muted)" data-i18n="kit.cup.sub"></div>
-            </div>
-            <span class="co-price">+ R$ 12,00</span>
-          </label>
         </div>
       </div>
 
@@ -1087,8 +1088,8 @@ function toDb(r) {
     shirt_size:r.shirtSize, flight_date:r.flightDate, flight_num:r.flightNum,
     arrival_method:r.arrivalMethod, arrival_date:r.arrivalDate, arrival_time:r.arrivalTime,
     depart_date:r.departDate, depart_num:r.departNum, companion:r.companion,
-    comp_shirt:r.compShirt, comp_shirt_size:r.compShirtSize, comp_cup:r.compCup,
-    kit_qty:r.kitQty, kit_sleeve:r.kitSleeve, comp_sleeve:r.compSleeve, kit_extra:r.kitExtra, kit_total:r.kitTotal,
+    kit_qty:r.kitQty, kit_sleeve:r.kitSleeve, kit_total:r.kitTotal,
+    kit_extra_items:JSON.stringify(r.kitExtraItems||[]),
     notes:r.notes, status:r.status, created_at:r.createdAt, updated_at:r.updatedAt,
   };
 }
@@ -1100,8 +1101,8 @@ function fromDb(r) {
     shirtSize:r.shirt_size, flightDate:r.flight_date, flightNum:r.flight_num,
     arrivalMethod:r.arrival_method, arrivalDate:r.arrival_date, arrivalTime:r.arrival_time,
     departDate:r.depart_date, departNum:r.depart_num, companion:r.companion,
-    compShirt:r.comp_shirt, compShirtSize:r.comp_shirt_size, compCup:r.comp_cup,
-    kitQty:r.kit_qty, kitSleeve:r.kit_sleeve, compSleeve:r.comp_sleeve, kitExtra:r.kit_extra, kitTotal:r.kit_total,
+    kitQty:r.kit_qty, kitSleeve:r.kit_sleeve, kitTotal:r.kit_total,
+    kitExtraItems:JSON.parse(r.kit_extra_items||'[]'),
     notes:r.notes, status:r.status, createdAt:r.created_at, updatedAt:r.updated_at,
   };
 }
@@ -1225,6 +1226,17 @@ const TRANS = {
     'rank.fullpatch':'Full Patch', 'rank.prospect':'Próspero', 'rank.support':'Suporte', 'rank.hangaround':'Hangaround',
     'kit.sleeve.label':'Manga da Camiseta', 'kit.sleeve.long':'Manga Longa', 'kit.sleeve.short':'Manga Curta',
     'kit.sleeve.disc':'−R$5,00 / kit', 'kit.sleeve.comp.disc':'−R$5,00',
+    'kit.order.title':'🛒 Pedido de Kit',
+    'kit.order.participant.title':'Kit do Participante',
+    'kit.order.extras.title':'Itens Extras (adicionar individualmente)',
+    'kit.order.cart.title':'Itens no Pedido',
+    'kit.order.cart.empty':'Nenhum item extra adicionado.',
+    'kit.order.total.label':'Total do Pedido',
+    'kit.order.save':'Salvar Pedido de Kit',
+    'kit.order.saved':'Pedido de kit salvo com sucesso!',
+    'kit.order.noReg':'Preencha sua inscrição antes de salvar o pedido de kit.',
+    'kit.order.err.size':'Selecione o tamanho para todos os itens de camiseta no carrinho.',
+    'kit.order.add':'+ Adicionar',
     'btn.cancel':'Cancelar',
     'fp.title':'Redefinir Senha', 'fp.sub':'Informe seu e-mail, o código admin e a nova senha.',
     'fp.code':'Código Admin', 'fp.newpass':'Nova Senha (mín. 6 caracteres)', 'fp.confirm':'Confirmar Nova Senha',
@@ -1308,6 +1320,17 @@ const TRANS = {
     'rank.fullpatch':'Full Patch', 'rank.prospect':'Prospect', 'rank.support':'Support', 'rank.hangaround':'Hangaround',
     'kit.sleeve.label':'T-Shirt Sleeve', 'kit.sleeve.long':'Long Sleeve', 'kit.sleeve.short':'Short Sleeve',
     'kit.sleeve.disc':'−R$5.00 / kit', 'kit.sleeve.comp.disc':'−R$5.00',
+    'kit.order.title':'🛒 Kit Order',
+    'kit.order.participant.title':'Participant Kit',
+    'kit.order.extras.title':'Extra Items (add individually)',
+    'kit.order.cart.title':'Items in Order',
+    'kit.order.cart.empty':'No extra items added.',
+    'kit.order.total.label':'Order Total',
+    'kit.order.save':'Save Kit Order',
+    'kit.order.saved':'Kit order saved successfully!',
+    'kit.order.noReg':'Please complete your registration before saving the kit order.',
+    'kit.order.err.size':'Select a size for all shirt items in the cart.',
+    'kit.order.add':'+ Add',
     'btn.cancel':'Cancel',
     'fp.title':'Reset Password', 'fp.sub':'Enter your e-mail, admin code and new password.',
     'fp.code':'Admin Code', 'fp.newpass':'New Password (min. 6 characters)', 'fp.confirm':'Confirm New Password',
@@ -1361,12 +1384,6 @@ function rebuildShirtSelects() {
     s.innerHTML = sizes.map(([val,lbl]) => `<option value="${val}">${lbl}</option>`).join('');
     s.value = v;
   });
-  ['co-shirt-size'].forEach(id => {
-    const s = document.getElementById(id); if (!s) return;
-    const v = s.value;
-    s.innerHTML = femSizes.map(([val,lbl]) => `<option value="${val}">${lbl}</option>`).join('');
-    s.value = v;
-  });
   // Update select first options that use data-i18n
   document.querySelectorAll('select option[data-i18n]').forEach(o => {
     o.textContent = t(o.dataset.i18n);
@@ -1403,12 +1420,10 @@ async function sha256(str) {
 let currentUser   = null;
 let adminUnlocked = false;
 let kitQty        = 1;
+let kitSleeve     = 'long';
+let kitCart       = [];
 let hasCompanion  = false;
 let arrivalMethod = '';
-let compShirt     = false;
-let compCup       = false;
-let kitSleeve     = 'long';
-let compSleeve    = 'long';
 const SLEEVE_DISC = 5;
 let brasaoDataUrl = '';
 
@@ -1590,10 +1605,7 @@ async function loadProfile() {
   const banner = document.getElementById('profile-status-banner');
   if (!reg) {
     banner.innerHTML=`<div class="status-banner sb-incomplete">${t('status.empty')}</div>`;
-    kitQty=1; hasCompanion=false; compShirt=false; compCup=false;
-    kitSleeve='long'; compSleeve='long';
-    selectSleeve('long'); selectCompSleeve('long');
-    updateKitUI(); return;
+    hasCompanion=false; return;
   }
   const sc = { incomplete:'sb-incomplete', pending:'sb-pending', paid:'sb-paid' };
   const sk = { incomplete:'status.incomplete', pending:'status.pending', paid:'status.paid' };
@@ -1615,24 +1627,11 @@ async function loadProfile() {
   document.querySelectorAll('[name="companion"]').forEach(r =>
     r.closest('.radio-opt').classList.toggle('sel', r.value===(hasCompanion?'comp':'solo')));
   document.getElementById('companion-fields').classList.toggle('show',hasCompanion);
-  document.getElementById('kit-extras').classList.toggle('show',hasCompanion);
   if (hasCompanion&&reg.companion) {
     const c=reg.companion;
     f('c-name',c.name); f('c-club',c.club); f('c-country',c.country);
     f('c-phone',c.phone); f('c-passport',c.passport);
   }
-  compShirt=reg.compShirt||false; compCup=reg.compCup||false;
-  if (compShirt) f('co-shirt-size',reg.compShirtSize||'');
-  syncCO('co-shirt-opt','co-shirt',compShirt); syncCO('co-cup-opt','co-cup',compCup);
-  document.getElementById('extra-shirt-size-row').classList.toggle('show',compShirt);
-  kitQty=reg.kitQty||1;
-  selectSleeve(reg.kitSleeve||'long');
-  selectCompSleeve(reg.compSleeve||'long');
-  updateKitUI();
-}
-function syncCO(optId,cbId,state) {
-  document.getElementById(optId).classList.toggle('sel',state);
-  document.getElementById(cbId).checked=state;
 }
 
 // ══════════════════════════════════════════
@@ -1647,45 +1646,6 @@ function setCompanion(el,val) {
   document.querySelectorAll('[name="companion"]').forEach(r=>r.closest('.radio-opt').classList.remove('sel'));
   el.classList.add('sel'); hasCompanion=val;
   document.getElementById('companion-fields').classList.toggle('show',val);
-  document.getElementById('kit-extras').classList.toggle('show',val);
-  if (!val){ compShirt=false; compCup=false; syncCO('co-shirt-opt','co-shirt',false); syncCO('co-cup-opt','co-cup',false);
-    document.getElementById('extra-shirt-size-row').classList.remove('show'); }
-  updateKitUI();
-}
-function toggleCompExtra(type) {
-  if (type==='shirt'){ compShirt=!compShirt; syncCO('co-shirt-opt','co-shirt',compShirt);
-    document.getElementById('extra-shirt-size-row').classList.toggle('show',compShirt); }
-  else { compCup=!compCup; syncCO('co-cup-opt','co-cup',compCup); }
-  updateKitUI();
-}
-function changeKitQty(d) { kitQty=Math.max(1,Math.min(10,kitQty+d)); updateKitUI(); }
-function selectSleeve(val, el) {
-  kitSleeve = val;
-  document.getElementById('sleeve-long-opt').classList.toggle('sel', val==='long');
-  document.getElementById('sleeve-short-opt').classList.toggle('sel', val==='short');
-  updateKitUI();
-}
-function selectCompSleeve(val, el) {
-  compSleeve = val;
-  document.getElementById('comp-sleeve-long-opt').classList.toggle('sel', val==='long');
-  document.getElementById('comp-sleeve-short-opt').classList.toggle('sel', val==='short');
-  updateKitUI();
-}
-function updateKitUI() {
-  const kitUnitPrice  = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
-  const compShirtPrice = COMP_SHIRT - (compSleeve==='short' ? SLEEVE_DISC : 0);
-  const extra = (hasCompanion&&compShirt ? compShirtPrice : 0) + (hasCompanion&&compCup ? COMP_CUP : 0);
-  const total = kitQty * kitUnitPrice + extra;
-  document.getElementById('kit-qty').textContent = kitQty;
-  const unitEl = document.getElementById('kit-unit-price');
-  if (unitEl) unitEl.textContent = `R$ ${kitUnitPrice},00 / kit`;
-  const coShirtPriceEl = document.getElementById('co-shirt-price');
-  if (coShirtPriceEl) coShirtPriceEl.textContent = `+ R$ ${compShirtPrice},00`;
-  let bd = `${kitQty} kit${kitQty>1?'s':''} × R$ ${kitUnitPrice},00`;
-  if (hasCompanion&&compShirt) bd += ` · ${currentLang==='en'?"Women's shirt":"Cam.Fem."} R$ ${compShirtPrice},00`;
-  if (hasCompanion&&compCup)   bd += ` · ${currentLang==='en'?'Cup':'Copo'} R$ ${COMP_CUP},00`;
-  document.getElementById('kit-breakdown').textContent = bd;
-  document.getElementById('kit-total').textContent = `R$ ${total},00`;
 }
 
 // ══════════════════════════════════════════
@@ -1714,19 +1674,13 @@ async function saveProfile() {
       div.scrollIntoView({behavior:'smooth',block:'center'}); return; }
     companion={ name:cn, club:v('c-club'), country:v('c-country'), phone:cp, passport:cpa };
   }
-  const compShirtSize=compShirt?v('co-shirt-size'):'';
-  if (compShirt&&!compShirtSize){ div.innerHTML=`<div class="alert alert-e">${t('err.femsize')}</div>`;
-    div.scrollIntoView({behavior:'smooth',block:'center'}); return; }
   div.innerHTML='';
-  const kitUnitPrice   = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
-  const compShirtPrice = COMP_SHIRT - (compSleeve==='short' ? SLEEVE_DISC : 0);
-  const kitExtra=(hasCompanion&&compShirt?compShirtPrice:0)+(hasCompanion&&compCup?COMP_CUP:0);
-  const kitTotal=kitQty*kitUnitPrice+kitExtra;
   const existing = await DB.getReg(currentUser.email);
   const reg={ email:currentUser.email, name, rank, club, chapter, country, phone, passport, shirtSize,
     flightDate, flightNum, arrivalMethod, arrivalDate, arrivalTime, departDate, departNum,
-    companion, compShirt:hasCompanion&&compShirt, compShirtSize, compCup:hasCompanion&&compCup,
-    kitQty, kitSleeve, compSleeve, kitExtra, kitTotal, notes,
+    companion, notes,
+    kitQty:existing?.kitQty||0, kitSleeve:existing?.kitSleeve||'long',
+    kitTotal:existing?.kitTotal||0, kitExtraItems:existing?.kitExtraItems||[],
     status:existing?.status||'pending',
     createdAt:existing?.createdAt||new Date().toISOString(),
     updatedAt:new Date().toISOString() };
@@ -1740,9 +1694,7 @@ async function saveProfile() {
     <div class="sum-item"><span>${t('travel.arrdate').replace(' *','')}:</span><span>${arrivalDate} ${arrivalTime} · ${meth[arrivalMethod]||arrivalMethod}</span></div>
     ${departDate?`<div class="sum-item"><span>${t('travel.deptdate')}:</span><span>${departDate}${departNum?' · '+departNum:''}</span></div>`:''}
     ${companion?`<div class="sum-item"><span>${t('sec.companion').replace('👥 ','')}:</span><span>${companion.name}</span></div>`:''}
-    ${compShirt?`<div class="sum-item"><span>${t('kit.femsize').replace(' *','')}:</span><span>${compShirtSize}</span></div>`:''}
-    <div class="sum-item"><span>Kits:</span><span>${kitQty}×</span></div>
-    <div class="sum-total"><span>Total:</span><span>R$ ${kitTotal},00</span></div>`;
+  `;
   document.getElementById('modal-pix').textContent=await DB.pix();
   openModal('saved-modal');
 }
@@ -2081,26 +2033,208 @@ async function renderKitPage() {
   const total   = kitOnly.reduce((s,k) => s + (k.price||0), 0);
   document.getElementById('kit-page-total').textContent = `R$ ${total},00`;
   const grid = document.getElementById('kit-items-grid');
-  if (!kitOnly.length) { grid.innerHTML='<p style="color:var(--muted)">Nenhum item configurado.</p>'; return; }
-  grid.innerHTML = kitOnly.map(k => {
-    const isEn = currentLang === 'en';
-    const name = (isEn && k.name_en) ? k.name_en : k.name;
-    const desc = (isEn && k.description_en) ? k.description_en : (k.description||'');
-    const imgs = k.image ? k.image.split(',').map(s=>s.trim()).filter(Boolean) : [];
-    const imgSection = imgs.length
-      ? `<div class="kit-img-wrap" onclick="openKitLightbox(${JSON.stringify(imgs)})">
-           <img class="kit-item-img" src="${imgs[0]}" alt="" onerror="kitImgError(this)">
-           ${imgs.length>1?`<span class="kit-img-count">1 / ${imgs.length}</span>`:''}
-         </div>`
-      : `<div class="kit-item-img-ph">🎒</div>`;
-    return `<div class="kit-item-card">
-      ${imgSection}
-      <div class="kit-item-body">
-        <div class="kit-item-name">${name}</div>
-        <div class="kit-item-desc">${desc}</div>
+  if (!kitOnly.length) { grid.innerHTML='<p style="color:var(--muted)">Nenhum item configurado.</p>'; }
+  else {
+    grid.innerHTML = kitOnly.map(k => {
+      const isEn = currentLang === 'en';
+      const name = (isEn && k.name_en) ? k.name_en : k.name;
+      const desc = (isEn && k.description_en) ? k.description_en : (k.description||'');
+      const imgs = k.image ? k.image.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      const imgSection = imgs.length
+        ? `<div class="kit-img-wrap" onclick="openKitLightbox(${JSON.stringify(imgs)})">
+             <img class="kit-item-img" src="${imgs[0]}" alt="" onerror="kitImgError(this)">
+             ${imgs.length>1?`<span class="kit-img-count">1 / ${imgs.length}</span>`:''}
+           </div>`
+        : `<div class="kit-item-img-ph">🎒</div>`;
+      return `<div class="kit-item-card">
+        ${imgSection}
+        <div class="kit-item-body">
+          <div class="kit-item-name">${name}</div>
+          <div class="kit-item-desc">${desc}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  if (currentUser) loadKitOrder();
+}
+
+// ── KIT ORDER ──
+function itemIsShirt(item) {
+  return (item.name + ' ' + (item.name_en||'')).toLowerCase().match(/shirt|camiseta/);
+}
+
+async function loadKitOrder() {
+  const reg = await DB.getReg(currentUser.email);
+  kitQty   = reg?.kitQty   ?? 1;
+  kitSleeve= reg?.kitSleeve ?? 'long';
+  kitCart  = Array.isArray(reg?.kitExtraItems) ? reg.kitExtraItems : [];
+  const card = document.getElementById('kit-order-card');
+  card.style.display = '';
+  document.getElementById('kit-order-qty').textContent = kitQty;
+  const sleeveRow = document.getElementById('kit-order-sleeve-row');
+  sleeveRow.style.display = kitQty > 0 ? '' : 'none';
+  document.getElementById('kit-order-sleeve-long').classList.toggle('sel', kitSleeve==='long');
+  document.getElementById('kit-order-sleeve-short').classList.toggle('sel', kitSleeve==='short');
+  updateKitOrderUnitPrice();
+  renderKitOrderExtras();
+  renderKitCart();
+  updateKitOrderTotal();
+}
+
+function changeOrderKitQty(d) {
+  kitQty = Math.max(0, Math.min(10, kitQty + d));
+  document.getElementById('kit-order-qty').textContent = kitQty;
+  const sleeveRow = document.getElementById('kit-order-sleeve-row');
+  sleeveRow.style.display = kitQty > 0 ? '' : 'none';
+  updateKitOrderUnitPrice();
+  updateKitOrderTotal();
+}
+
+function selectOrderSleeve(val, el) {
+  kitSleeve = val;
+  document.getElementById('kit-order-sleeve-long').classList.toggle('sel', val==='long');
+  document.getElementById('kit-order-sleeve-short').classList.toggle('sel', val==='short');
+  updateKitOrderUnitPrice();
+  updateKitOrderTotal();
+}
+
+function updateKitOrderUnitPrice() {
+  const unitPrice = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
+  document.getElementById('kit-order-unit-price').textContent = `R$ ${unitPrice},00 / kit`;
+}
+
+function renderKitOrderExtras() {
+  const extras = kitItemsCache.filter(k => k.category === 'extra' && k.active);
+  const isEn = currentLang === 'en';
+  const html = extras.map(e => {
+    const name = (isEn && e.name_en) ? e.name_en : e.name;
+    return `<div class="extras-add-row">
+      <span class="ear-name">${name}</span>
+      <span class="ear-price">R$ ${e.price||0},00</span>
+      <button class="btn btn-sm btn-secondary" style="padding:4px 12px;font-size:.8em" onclick="addToKitCart(${e.id})">${t('kit.order.add')}</button>
+    </div>`;
+  }).join('');
+  document.getElementById('kit-order-extras-list').innerHTML = html || `<p style="color:var(--muted);font-size:.85em">—</p>`;
+}
+
+function addToKitCart(itemId) {
+  const item = kitItemsCache.find(k => k.id === itemId);
+  if (!item) return;
+  const isShirt = !!itemIsShirt(item);
+  kitCart.push({
+    id: item.id,
+    name: item.name,
+    nameEn: item.name_en||'',
+    price: item.price||0,
+    hasSleeve: isShirt,
+    hasSize: isShirt,
+    sleeve: 'long',
+    size: '',
+  });
+  renderKitCart();
+  updateKitOrderTotal();
+}
+
+function removeFromKitCart(idx) {
+  kitCart.splice(idx, 1);
+  renderKitCart();
+  updateKitOrderTotal();
+}
+
+function updateCartItem(idx, field, val) {
+  if (!kitCart[idx]) return;
+  kitCart[idx][field] = val;
+  if (field === 'sleeve') {
+    const longBtn  = document.getElementById(`cart-sl-long-${idx}`);
+    const shortBtn = document.getElementById(`cart-sl-short-${idx}`);
+    if (longBtn)  longBtn.classList.toggle('sel', val==='long');
+    if (shortBtn) shortBtn.classList.toggle('sel', val==='short');
+  }
+  updateKitOrderTotal();
+}
+
+function renderKitCart() {
+  const container = document.getElementById('kit-order-cart');
+  if (!kitCart.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:.85em;margin:4px 0">${t('kit.order.cart.empty')}</p>`;
+    return;
+  }
+  const isEn = currentLang === 'en';
+  const SIZES = ['PP','P','M','G','GG','XGG'];
+  container.innerHTML = kitCart.map((item, idx) => {
+    const name = (isEn && item.nameEn) ? item.nameEn : item.name;
+    const disc = item.sleeve === 'short' ? SLEEVE_DISC : 0;
+    const price = item.price - disc;
+    const sizeCtrl = item.hasSize
+      ? `<select onchange="updateCartItem(${idx},'size',this.value)">
+           <option value="">${t('opt.select')}</option>
+           ${SIZES.map(s=>`<option value="${s}" ${item.size===s?'selected':''}>${s}</option>`).join('')}
+         </select>`
+      : '';
+    const sleeveCtrl = item.hasSleeve
+      ? `<label class="radio-opt ${item.sleeve==='long'?'sel':''}" id="cart-sl-long-${idx}" onclick="updateCartItem(${idx},'sleeve','long')" style="padding:4px 10px;font-size:.8em">
+           <input type="radio" name="cart-sl-${idx}"><span class="rdot"></span><span>${t('kit.sleeve.long')}</span>
+         </label>
+         <label class="radio-opt ${item.sleeve==='short'?'sel':''}" id="cart-sl-short-${idx}" onclick="updateCartItem(${idx},'sleeve','short')" style="padding:4px 10px;font-size:.8em">
+           <input type="radio" name="cart-sl-${idx}"><span class="rdot"></span><span>${t('kit.sleeve.short')}</span>
+           <span style="color:var(--success);font-size:.78em;margin-left:4px">−R$5</span>
+         </label>`
+      : '';
+    return `<div class="cart-item-row">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${name}</div>
+        <div class="cart-item-controls">
+          ${sizeCtrl}
+          ${sleeveCtrl}
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:8px;flex-shrink:0">
+        <span class="co-price" style="margin-top:2px" id="cart-item-price-${idx}">R$ ${price},00</span>
+        <button class="cart-rm-btn" onclick="removeFromKitCart(${idx})">×</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function updateKitOrderTotal() {
+  const unitPrice = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
+  const kitSubtotal = kitQty * unitPrice;
+  const extrasTotal = kitCart.reduce((s, item) => {
+    const disc = item.sleeve === 'short' ? SLEEVE_DISC : 0;
+    return s + item.price - disc;
+  }, 0);
+  const total = kitSubtotal + extrasTotal;
+  document.getElementById('kit-order-total').textContent = `R$ ${total},00`;
+  // update individual cart item prices
+  kitCart.forEach((item, idx) => {
+    const el = document.getElementById(`cart-item-price-${idx}`);
+    if (el) { const disc = item.sleeve==='short' ? SLEEVE_DISC : 0; el.textContent = `R$ ${item.price-disc},00`; }
+  });
+}
+
+async function saveKitOrder() {
+  const alertEl = document.getElementById('kit-order-alert');
+  alertEl.innerHTML = '';
+  if (!currentUser) return;
+  const existing = await DB.getReg(currentUser.email);
+  if (!existing) {
+    alertEl.innerHTML = `<div class="alert alert-e">${t('kit.order.noReg')}</div>`;
+    alertEl.scrollIntoView({behavior:'smooth',block:'center'}); return;
+  }
+  const missingSize = kitCart.find(item => item.hasSize && !item.size);
+  if (missingSize) {
+    alertEl.innerHTML = `<div class="alert alert-e">${t('kit.order.err.size')}</div>`;
+    alertEl.scrollIntoView({behavior:'smooth',block:'center'}); return;
+  }
+  const unitPrice = KIT_PRICE - (kitSleeve==='short' ? SLEEVE_DISC : 0);
+  const extrasTotal = kitCart.reduce((s, item) => {
+    const disc = item.sleeve==='short' ? SLEEVE_DISC : 0; return s + item.price - disc;
+  }, 0);
+  const kitTotal = kitQty * unitPrice + extrasTotal;
+  const updated = { ...existing, kitQty, kitSleeve, kitTotal, kitExtraItems: kitCart };
+  await DB.upsertReg(updated);
+  alertEl.innerHTML = `<div class="alert alert-s">${t('kit.order.saved')}</div>`;
+  setTimeout(() => alertEl.innerHTML = '', 3500);
 }
 
 // ── ADMIN KIT MANAGEMENT ──
@@ -2341,9 +2475,8 @@ async function updateKitPricesFromDB() {
   if (homeEl) homeEl.textContent = fmt;
   const kitPageEl = document.getElementById('kit-page-total');
   if (kitPageEl) kitPageEl.textContent = fmt;
-  const unitEl = document.getElementById('kit-unit-price');
-  if (unitEl) unitEl.textContent = `${fmt} / kit`;
-  updateKitUI();
+  const orderUnitEl = document.getElementById('kit-order-unit-price');
+  if (orderUnitEl) updateKitOrderUnitPrice();
 }
 
 // ══════════════════════════════════════════
