@@ -553,6 +553,10 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
               <span style="color:var(--success);font-size:.78em;margin-left:5px" data-i18n="kit.sleeve.disc"></span>
             </label>
           </div>
+          <div class="form-group" style="max-width:260px;margin-top:12px;margin-bottom:0">
+            <label data-i18n="f.shirtsize"></label>
+            <select id="kit-order-shirt-size" onchange="kitShirtSize=this.value"></select>
+          </div>
         </div>
       </div>
 
@@ -636,12 +640,6 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
           <div class="form-group">
             <label data-i18n="f.passport"></label>
             <input type="text" id="p-passport" data-i18n-ph="f.passport.ph">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label data-i18n="f.shirtsize"></label>
-            <select id="p-size"></select>
           </div>
         </div>
       </div>
@@ -1243,6 +1241,7 @@ const TRANS = {
     'kit.order.saved':'Pedido de kit salvo com sucesso!',
     'kit.order.noReg':'Preencha sua inscrição antes de salvar o pedido de kit.',
     'kit.order.err.size':'Selecione o tamanho para todos os itens de camiseta no carrinho.',
+    'kit.order.err.kitsize':'Selecione o tamanho da camiseta do participante.',
     'kit.order.add':'+ Adicionar',
     'btn.cancel':'Cancelar',
     'fp.title':'Redefinir Senha', 'fp.sub':'Informe seu e-mail, o código admin e a nova senha.',
@@ -1337,6 +1336,7 @@ const TRANS = {
     'kit.order.saved':'Kit order saved successfully!',
     'kit.order.noReg':'Please complete your registration before saving the kit order.',
     'kit.order.err.size':'Select a size for all shirt items in the cart.',
+    'kit.order.err.kitsize':"Select the participant's t-shirt size.",
     'kit.order.add':'+ Add',
     'btn.cancel':'Cancel',
     'fp.title':'Reset Password', 'fp.sub':'Enter your e-mail, admin code and new password.',
@@ -1385,12 +1385,13 @@ function rebuildShirtSelects() {
     ['PP', t('size.pp')],
     ...sizes.slice(1),
   ];
-  ['p-size'].forEach(id => {
-    const s = document.getElementById(id); if (!s) return;
-    const v = s.value;
-    s.innerHTML = sizes.map(([val,lbl]) => `<option value="${val}">${lbl}</option>`).join('');
-    s.value = v;
-  });
+  // kit-order participant size select
+  const kitSzEl = document.getElementById('kit-order-shirt-size');
+  if (kitSzEl) {
+    const v = kitSzEl.value;
+    kitSzEl.innerHTML = sizes.map(([val,lbl]) => `<option value="${val}">${lbl}</option>`).join('');
+    kitSzEl.value = v;
+  }
   // Update select first options that use data-i18n
   document.querySelectorAll('select option[data-i18n]').forEach(o => {
     o.textContent = t(o.dataset.i18n);
@@ -1428,6 +1429,7 @@ let currentUser   = null;
 let adminUnlocked = false;
 let kitQty        = 1;
 let kitSleeve     = 'long';
+let kitShirtSize  = '';
 let kitCart       = [];
 let hasCompanion  = false;
 let arrivalMethod = '';
@@ -1621,7 +1623,7 @@ async function loadProfile() {
   const f=(id,v)=>{ const e=document.getElementById(id); if(e&&v!=null) e.value=v; };
   f('p-name',reg.name); f('p-rank',reg.rank); f('p-club',reg.club); f('p-chapter',reg.chapter);
   f('p-country',reg.country); f('p-phone',reg.phone); f('p-passport',reg.passport);
-  f('p-size',reg.shirtSize); f('p-flight-date',reg.flightDate); f('p-flight-num',reg.flightNum);
+  f('p-flight-date',reg.flightDate); f('p-flight-num',reg.flightNum);
   f('p-arrival-date',reg.arrivalDate); f('p-arrival-time',reg.arrivalTime);
   f('p-depart-date',reg.departDate); f('p-depart-num',reg.departNum); f('p-notes',reg.notes);
   if (reg.arrivalMethod) {
@@ -1662,12 +1664,12 @@ async function saveProfile() {
   const v=id=>document.getElementById(id)?.value?.trim()||'';
   const div=document.getElementById('profile-alert');
   const name=v('p-name'), rank=v('p-rank'), club=v('p-club'), chapter=v('p-chapter'), country=v('p-country')||'Brasil';
-  const phone=v('p-phone'), passport=v('p-passport'), shirtSize=v('p-size');
+  const phone=v('p-phone'), passport=v('p-passport');
   const flightDate=v('p-flight-date'), flightNum=v('p-flight-num');
   const arrivalDate=v('p-arrival-date'), arrivalTime=v('p-arrival-time');
   const departDate=v('p-depart-date'), departNum=v('p-depart-num'), notes=v('p-notes');
   const req={ [t('f.fullname')]:name, [t('f.rank')]:rank, [t('f.motoclub')]:club,
-    [t('f.phone')]:phone, [t('f.passport')]:passport, [t('f.shirtsize')]:shirtSize,
+    [t('f.phone')]:phone, [t('f.passport')]:passport,
     [t('travel.flightdate')]:flightDate, [t('travel.flightnum')]:flightNum,
     [t('travel.arrmode')]:arrivalMethod, [t('travel.arrdate')]:arrivalDate,
     [t('travel.arrtime')]:arrivalTime };
@@ -1683,7 +1685,8 @@ async function saveProfile() {
   }
   div.innerHTML='';
   const existing = await DB.getReg(currentUser.email);
-  const reg={ email:currentUser.email, name, rank, club, chapter, country, phone, passport, shirtSize,
+  const reg={ email:currentUser.email, name, rank, club, chapter, country, phone, passport,
+    shirtSize:existing?.shirtSize||'',
     flightDate, flightNum, arrivalMethod, arrivalDate, arrivalTime, departDate, departNum,
     companion, notes,
     kitQty:existing?.kitQty||0, kitSleeve:existing?.kitSleeve||'long',
@@ -2048,7 +2051,7 @@ async function renderKitPage() {
       const desc = (isEn && k.description_en) ? k.description_en : (k.description||'');
       const imgs = k.image ? k.image.split(',').map(s=>s.trim()).filter(Boolean) : [];
       const imgSection = imgs.length
-        ? `<div class="kit-img-wrap" onclick="openKitLightbox(${JSON.stringify(imgs)})">
+        ? `<div class="kit-img-wrap" onclick="openKitLightbox(${JSON.stringify(imgs).replace(/"/g,'&quot;')})">
              <img class="kit-item-img" src="${imgs[0]}" alt="" onerror="kitImgError(this)">
              ${imgs.length>1?`<span class="kit-img-count">1 / ${imgs.length}</span>`:''}
            </div>`
@@ -2072,9 +2075,10 @@ function itemIsShirt(item) {
 
 async function loadKitOrder() {
   const reg = await DB.getReg(currentUser.email);
-  kitQty   = reg?.kitQty   ?? 1;
-  kitSleeve= reg?.kitSleeve ?? 'long';
-  kitCart  = Array.isArray(reg?.kitExtraItems) ? reg.kitExtraItems : [];
+  kitQty        = reg?.kitQty       ?? 1;
+  kitSleeve     = reg?.kitSleeve    ?? 'long';
+  kitShirtSize  = reg?.shirtSize    ?? '';
+  kitCart       = Array.isArray(reg?.kitExtraItems) ? reg.kitExtraItems : [];
   const card = document.getElementById('kit-order-card');
   card.style.display = '';
   document.getElementById('kit-order-qty').textContent = kitQty;
@@ -2082,6 +2086,9 @@ async function loadKitOrder() {
   sleeveRow.style.display = kitQty > 0 ? '' : 'none';
   document.getElementById('kit-order-sleeve-long').classList.toggle('sel', kitSleeve==='long');
   document.getElementById('kit-order-sleeve-short').classList.toggle('sel', kitSleeve==='short');
+  rebuildShirtSelects();
+  const szEl = document.getElementById('kit-order-shirt-size');
+  if (szEl) szEl.value = kitShirtSize;
   updateKitOrderUnitPrice();
   renderKitOrderExtras();
   renderKitCart();
@@ -2093,6 +2100,7 @@ function changeOrderKitQty(d) {
   document.getElementById('kit-order-qty').textContent = kitQty;
   const sleeveRow = document.getElementById('kit-order-sleeve-row');
   sleeveRow.style.display = kitQty > 0 ? '' : 'none';
+  if (kitQty === 0) { kitShirtSize = ''; const szEl = document.getElementById('kit-order-shirt-size'); if (szEl) szEl.value = ''; }
   updateKitOrderUnitPrice();
   updateKitOrderTotal();
 }
@@ -2261,8 +2269,12 @@ async function saveKitOrder() {
   const extrasTotal = kitCart.reduce((s, item) => {
     const disc = item.sleeve==='short' ? SLEEVE_DISC : 0; return s + item.price - disc;
   }, 0);
+  if (kitQty > 0 && !kitShirtSize) {
+    alertEl.innerHTML = `<div class="alert alert-e">${t('kit.order.err.kitsize')}</div>`;
+    alertEl.scrollIntoView({behavior:'smooth',block:'center'}); return;
+  }
   const kitTotal = kitQty * unitPrice + extrasTotal;
-  const updated = { ...existing, kitQty, kitSleeve, kitTotal, kitExtraItems: kitCart };
+  const updated = { ...existing, kitQty, kitSleeve, kitTotal, kitExtraItems: kitCart, shirtSize: kitShirtSize };
   await DB.upsertReg(updated);
   alertEl.innerHTML = `<div class="alert alert-s">${t('kit.order.saved')}</div>`;
   setTimeout(() => alertEl.innerHTML = '', 3500);
