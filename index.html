@@ -314,6 +314,53 @@ main { max-width:980px; margin:26px auto; padding:0 15px; }
 
 footer { text-align:center; padding:16px; color:#333; font-size:.75em;
   border-top:1px solid #161616; margin-top:8px; }
+
+/* ══ MOBILE ══ */
+@media(max-width:640px){
+  /* Compact header */
+  header { padding:8px 12px; gap:6px; }
+  .hdr-brand img { height:34px; }
+  .hdr-brand h1 { font-size:1.05em; letter-spacing:3px; }
+  .hdr-brand p { font-size:.65em; letter-spacing:1px; }
+  .hdr-user { font-size:.75em; gap:5px; }
+
+  /* Fixed bottom tab bar */
+  nav {
+    position:fixed; bottom:0; left:0; right:0; z-index:500;
+    gap:2px; padding:5px 4px;
+    padding-bottom:max(5px, env(safe-area-inset-bottom));
+    background:rgba(12,12,12,.97);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-top:1px solid #2a2a2a; border-bottom:none;
+    box-shadow:0 -2px 16px rgba(0,0,0,.5);
+  }
+  nav button {
+    flex:1; font-size:.6em; padding:7px 2px 6px;
+    letter-spacing:.2px; border:none; border-radius:6px;
+    min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  nav button.active {
+    background:rgba(201,168,76,.15); color:var(--gold);
+    border:1px solid rgba(201,168,76,.25);
+  }
+
+  /* Prevent content going under fixed nav */
+  main { padding-bottom:74px; }
+  footer { margin-bottom:64px; }
+
+  /* Smaller event hero image */
+  .event-hero-img { max-height:150px !important; }
+
+  /* Auth screen */
+  #screen-auth { padding:16px 12px; }
+  .auth-box { padding:20px 16px; }
+
+  /* Kit grid: 2 columns on mobile */
+  .kit-grid { grid-template-columns:repeat(2,1fr) !important; gap:10px; }
+
+  /* Modals */
+  .modal { padding:18px 14px; }
+}
 </style>
 </head>
 <body>
