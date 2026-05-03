@@ -1978,6 +1978,11 @@ async function renderClubsMgmt() {
 // ══════════════════════════════════════════
 let lbImages = [], lbIdx = 0;
 
+function kitImgError(img) {
+  const wrap = img.closest('.kit-img-wrap');
+  if (wrap) wrap.outerHTML = '<div class="kit-item-img-ph">🎒</div>';
+}
+
 function openKitLightbox(imgs) {
   lbImages = Array.isArray(imgs) ? imgs : [imgs];
   lbIdx = 0;
@@ -2025,7 +2030,7 @@ async function renderKitPage() {
     const imgs = k.image ? k.image.split(',').map(s=>s.trim()).filter(Boolean) : [];
     const imgSection = imgs.length
       ? `<div class="kit-img-wrap" onclick="openKitLightbox(${JSON.stringify(imgs)})">
-           <img class="kit-item-img" src="${imgs[0]}" alt="${name}">
+           <img class="kit-item-img" src="${imgs[0]}" alt="" onerror="kitImgError(this)">
            ${imgs.length>1?`<span class="kit-img-count">1 / ${imgs.length}</span>`:''}
          </div>`
       : `<div class="kit-item-img-ph">🎒</div>`;
