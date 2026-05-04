@@ -270,6 +270,22 @@ main { max-width:980px; margin:26px auto; padding:0 15px; }
   flex-shrink:0; margin-top:2px; }
 .cart-rm-btn:hover { border-color:var(--gold); color:var(--gold); }
 
+/* ── WIZARD ── */
+.wizard-step { display:none; }
+.wizard-step.active { display:block; }
+.wizard-header { text-align:center; margin-bottom:18px; }
+.wizard-header .wiz-icon { font-size:2.4em; margin-bottom:6px; }
+.wizard-header h3 { margin:0 0 5px; font-size:1.15em; }
+.wizard-header p { color:var(--muted); font-size:.84em; margin:0; }
+.wizard-club-row { display:flex; flex-direction:column; gap:10px; }
+.cpf-input { letter-spacing:2px; font-size:1.05em; text-align:center; }
+.wizard-alt { font-size:.78em; color:var(--muted); text-align:center; margin-top:10px; cursor:pointer; }
+.wizard-alt:hover { color:var(--gold); }
+.wiz-member-preview { background:#111; border:1px solid var(--border); border-radius:8px;
+  padding:12px 14px; margin:12px 0; font-size:.86em; }
+.wiz-member-preview .wmp-name { font-size:1em; font-weight:700; color:var(--gold); margin-bottom:6px; }
+.wiz-member-preview .wmp-row { display:flex; gap:6px; color:var(--muted); margin-top:3px; }
+.wiz-member-preview .wmp-label { color:#666; min-width:80px; }
 /* ── ADMIN KIT MANAGEMENT ── */
 .kit-admin-section { display:none; }
 .kit-admin-section.show { display:block; }
@@ -1009,6 +1025,74 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
   </div>
 </div>
 
+<!-- ══ WELCOME WIZARD ══ -->
+<div class="modal-overlay" id="wizard-modal">
+  <div class="modal" style="max-width:420px">
+
+    <!-- Step 1: Club + Country -->
+    <div class="wizard-step active" id="wiz-step-1">
+      <div class="wizard-header">
+        <div class="wiz-icon">🏍️</div>
+        <h3 data-i18n="wiz.step1.title"></h3>
+        <p data-i18n="wiz.step1.sub"></p>
+      </div>
+      <div class="wizard-club-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label data-i18n="wiz.club.label"></label>
+          <input type="text" id="wiz-club" data-i18n-ph="wiz.club.ph" autocomplete="organization">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label data-i18n="wiz.country.label"></label>
+          <input type="text" id="wiz-country" value="Brasil" data-i18n-ph="wiz.country.ph" autocomplete="country-name">
+        </div>
+      </div>
+      <div id="wiz-step1-alert" style="margin-top:8px"></div>
+      <button class="btn btn-primary btn-full" onclick="wizardStep1Next()" data-i18n="wiz.next" style="margin-top:14px"></button>
+      <div class="wizard-alt" onclick="wizardFinish(false)" data-i18n="wiz.skip"></div>
+    </div>
+
+    <!-- Step 2A: CPF verification (Nacionaes BR) -->
+    <div class="wizard-step" id="wiz-step-2a">
+      <div class="wizard-header">
+        <div class="wiz-icon">🔍</div>
+        <h3 data-i18n="wiz.step2a.title"></h3>
+        <p data-i18n="wiz.step2a.sub"></p>
+      </div>
+      <div class="form-group">
+        <label data-i18n="wiz.cpf.label"></label>
+        <input type="text" id="wiz-cpf" class="cpf-input" data-i18n-ph="wiz.cpf.ph"
+          maxlength="14" inputmode="numeric" oninput="wizFormatCpf(this)">
+      </div>
+      <div id="wiz-2a-alert" style="margin-top:4px"></div>
+
+      <!-- Member preview (hidden until found) -->
+      <div class="wiz-member-preview" id="wiz-member-preview" style="display:none">
+        <div class="wmp-name" id="wmp-name"></div>
+        <div class="wmp-row"><span class="wmp-label" data-i18n="wiz.rank.label"></span><span id="wmp-rank"></span></div>
+        <div class="wmp-row"><span class="wmp-label" data-i18n="nav.kit"></span><span id="wmp-club"></span></div>
+        <div class="wmp-row"><span class="wmp-label" data-i18n="wiz.chapter.label"></span><span id="wmp-chapter"></span></div>
+        <div class="wmp-row"><span class="wmp-label" data-i18n="wiz.country.label"></span><span id="wmp-country"></span></div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="wiz-verify-btn" onclick="wizardVerifyCpf()" data-i18n="wiz.verify" style="margin-top:10px"></button>
+      <button class="btn btn-primary btn-full" id="wiz-use-btn" onclick="wizardUseMember()" data-i18n="wiz.use" style="margin-top:8px;display:none"></button>
+      <div class="wizard-alt" onclick="wizardGoStep(1)" style="margin-top:8px">← Voltar / Back</div>
+    </div>
+
+    <!-- Step 2B: Non-Nacionaes / non-Brazil -->
+    <div class="wizard-step" id="wiz-step-2b">
+      <div class="wizard-header">
+        <div class="wiz-icon">✈️</div>
+        <h3 data-i18n="wiz.step2b.title"></h3>
+        <p data-i18n="wiz.step2b.sub"></p>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="wizardFinish(true)" data-i18n="wiz.goreg" style="margin-top:8px"></button>
+      <div class="wizard-alt" onclick="wizardFinish(false)" data-i18n="wiz.skip"></div>
+    </div>
+
+  </div>
+</div>
+
 <div class="modal-overlay" id="saved-modal">
   <div class="modal">
     <div style="font-size:2.8em;text-align:center;margin-bottom:8px">✅</div>
@@ -1159,6 +1243,11 @@ const DB = {
   async deleteKitItem(id)  { await sb.from('kit_items').delete().eq('id',id); },
   async loginLogs()        { const {data}=await sb.from('login_logs').select('*').order('logged_at',{ascending:false}); return data||[]; },
   async insertLoginLog(r)  { await sb.from('login_logs').insert(r); },
+  async lookupMember(cpfHash) {
+    const {data,error} = await sb.rpc('lookup_member', { p_cpf_hash: cpfHash });
+    if (error || !data) return null;
+    return data;
+  },
 };
 
 const DEFAULT_KIT_ITEMS = [
@@ -1275,6 +1364,25 @@ const TRANS = {
     'fp.btn':'Redefinir',
     'arp.title':'Redefinir Senha do Usuário', 'arp.save':'Salvar Nova Senha',
     'admin.pass.label':'Senha administrativa',
+    'wiz.step1.title':'Bem-vindo(a) ao 8th International Meeting!',
+    'wiz.step1.sub':'Informe seu Moto Clube e País para começar.',
+    'wiz.club.label':'Moto Clube *', 'wiz.club.ph':'Nome do seu moto clube',
+    'wiz.country.label':'País *', 'wiz.country.ph':'Ex: Brasil, Alemanha…',
+    'wiz.next':'Próximo →',
+    'wiz.step2a.title':'Verificação de Membro Nacionaes',
+    'wiz.step2a.sub':'Informe seu CPF para importar seus dados automaticamente.',
+    'wiz.cpf.label':'CPF', 'wiz.cpf.ph':'000.000.000-00',
+    'wiz.verify':'Verificar',
+    'wiz.found.title':'Dados encontrados!',
+    'wiz.found.sub':'Confirme os dados abaixo e clique em Usar estes dados.',
+    'wiz.use':'Usar estes dados →',
+    'wiz.notfound':'CPF não encontrado na base de membros. Verifique e tente novamente.',
+    'wiz.step2b.title':'Bem-vindo(a)!',
+    'wiz.step2b.sub':'Preencha seus dados na página de inscrição para garantir sua vaga.',
+    'wiz.goreg':'Ir para Minha Inscrição →',
+    'wiz.skip':'Pular por enquanto',
+    'wiz.rank.label':'Graduação',
+    'wiz.chapter.label':'Chapter',
   },
   en: {
     'auth.signin':'Sign In', 'auth.register':'Create Account',
@@ -1374,6 +1482,25 @@ const TRANS = {
     'fp.btn':'Reset',
     'arp.title':'Reset User Password', 'arp.save':'Save New Password',
     'admin.pass.label':'Admin password',
+    'wiz.step1.title':'Welcome to the 8th International Meeting!',
+    'wiz.step1.sub':'Tell us your Moto Club and Country to get started.',
+    'wiz.club.label':'Moto Club *', 'wiz.club.ph':'Your motorcycle club name',
+    'wiz.country.label':'Country *', 'wiz.country.ph':'e.g. Germany, USA…',
+    'wiz.next':'Next →',
+    'wiz.step2a.title':'Nacionaes Member Verification',
+    'wiz.step2a.sub':'Enter your CPF to automatically import your details.',
+    'wiz.cpf.label':'CPF', 'wiz.cpf.ph':'000.000.000-00',
+    'wiz.verify':'Verify',
+    'wiz.found.title':'Member found!',
+    'wiz.found.sub':'Confirm the details below and click Use these details.',
+    'wiz.use':'Use these details →',
+    'wiz.notfound':'CPF not found in the member database. Please check and try again.',
+    'wiz.step2b.title':'Welcome!',
+    'wiz.step2b.sub':'Please fill in your details on the registration page to secure your spot.',
+    'wiz.goreg':'Go to My Registration →',
+    'wiz.skip':'Skip for now',
+    'wiz.rank.label':'Rank',
+    'wiz.chapter.label':'Chapter',
   }
 };
 
@@ -1591,6 +1718,7 @@ async function launchApp() {
   await seedClubsIfEmpty();
   await updateKitPricesFromDB();
   await renderClubs(); await loadProfile(); showPage('home');
+  showWizardIfNeeded(); // async, fire-and-forget after home renders
 }
 
 async function seedClubsIfEmpty() {
@@ -1979,6 +2107,112 @@ async function generatePDF() {
   });
 
   doc.save(`LEMC_Munich_2026_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ══════════════════════════════════════════
+//  WELCOME WIZARD
+// ══════════════════════════════════════════
+let _wizMember = null; // holds found member data until user confirms
+
+async function showWizardIfNeeded() {
+  // Skip if already completed (stored per email)
+  const key = 'lemc_wizard_' + currentUser.email;
+  if (localStorage.getItem(key)) return;
+  // Skip if registration already has a name filled
+  const reg = await DB.getReg(currentUser.email);
+  if (reg?.name) { localStorage.setItem(key,'1'); return; }
+  // Show wizard
+  applyLang();
+  wizardGoStep(1);
+  openModal('wizard-modal');
+}
+
+function wizardGoStep(n) {
+  document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  document.getElementById(`wiz-step-${n}`).classList.add('active');
+  _wizMember = null;
+  document.getElementById('wiz-member-preview').style.display = 'none';
+  document.getElementById('wiz-verify-btn').style.display = '';
+  document.getElementById('wiz-use-btn').style.display = 'none';
+  document.getElementById('wiz-2a-alert').innerHTML = '';
+}
+
+function wizardStep1Next() {
+  const club    = document.getElementById('wiz-club').value.trim();
+  const country = document.getElementById('wiz-country').value.trim();
+  const alertEl = document.getElementById('wiz-step1-alert');
+  if (!club || !country) {
+    alertEl.innerHTML = `<div class="alert alert-e">${t('err.fields')}</div>`; return;
+  }
+  alertEl.innerHTML = '';
+  const isNacionaes = /nacion[ae]+s/i.test(club);
+  const isBrasil    = /bras[ia]l/i.test(country);
+  if (isNacionaes && isBrasil) {
+    wizardGoStep('2a');
+  } else {
+    wizardGoStep('2b');
+  }
+}
+
+function wizFormatCpf(el) {
+  // Keep only digits, apply mask 000.000.000-00
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 9)      v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
+  else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');
+  else if (v.length > 3) v = v.replace(/^(\d{3})(\d{0,3})/,'$1.$2');
+  el.value = v;
+}
+
+async function wizardVerifyCpf() {
+  const raw = document.getElementById('wiz-cpf').value.replace(/\D/g,'');
+  const alertEl = document.getElementById('wiz-2a-alert');
+  if (raw.length !== 11) {
+    alertEl.innerHTML = `<div class="alert alert-e">CPF inválido / Invalid CPF (11 digits)</div>`; return;
+  }
+  alertEl.innerHTML = `<div style="color:var(--muted);font-size:.85em;margin-top:4px">⏳ Verificando…</div>`;
+  const hash   = await sha256(raw);
+  const member = await DB.lookupMember(hash);
+  if (!member) {
+    alertEl.innerHTML = `<div class="alert alert-e">${t('wiz.notfound')}</div>`; return;
+  }
+  _wizMember = member;
+  alertEl.innerHTML = '';
+  // Show preview
+  document.getElementById('wmp-name').textContent    = member.name    || '';
+  document.getElementById('wmp-rank').textContent    = member.rank    || '—';
+  document.getElementById('wmp-club').textContent    = member.club    || '—';
+  document.getElementById('wmp-chapter').textContent = member.chapter || '—';
+  document.getElementById('wmp-country').textContent = member.country || '—';
+  document.getElementById('wiz-member-preview').style.display = '';
+  document.getElementById('wiz-verify-btn').style.display  = 'none';
+  document.getElementById('wiz-use-btn').style.display      = '';
+}
+
+async function wizardUseMember() {
+  if (!_wizMember) return;
+  const m = _wizMember;
+  // Pre-fill registration form fields
+  const f = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+  f('p-name',    m.name);
+  f('p-rank',    m.rank);
+  f('p-club',    m.club);
+  f('p-chapter', m.chapter);
+  f('p-country', m.country);
+  await wizardFinish(true);
+}
+
+async function wizardFinish(goReg) {
+  localStorage.setItem('lemc_wizard_' + currentUser.email, '1');
+  closeModal('wizard-modal');
+  if (goReg) {
+    showPage('profile');
+    if (_wizMember) {
+      const banner = document.getElementById('profile-status-banner');
+      banner.innerHTML = `<div class="status-banner" style="background:rgba(201,168,76,.12);border:1px solid var(--gold);color:var(--gold)">
+        ✅ Dados importados do cadastro de membros Nacionaes. Revise e salve sua inscrição.
+      </div>`;
+    }
+  }
 }
 
 // ══════════════════════════════════════════
