@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -1013,13 +1014,31 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
     <div style="font-size:2.8em;text-align:center;margin-bottom:8px">✅</div>
     <h3 style="text-align:center" data-i18n="modal.saved"></h3>
     <div class="summary-box" id="saved-summary"></div>
-    <div class="pix-box">
-      <p style="font-size:.78em;color:var(--muted);margin-bottom:5px" data-i18n="modal.pix.pay"></p>
-      <p style="font-size:.74em;color:#666" data-i18n="modal.pix.key"></p>
-      <span class="pix-key" id="modal-pix" onclick="copyPix()" title="Click to copy / Clique para copiar">—</span>
-      <p style="font-size:.7em;color:#555;margin-top:3px" data-i18n="modal.pix.note"></p>
-    </div>
+    <p style="font-size:.82em;color:var(--muted);text-align:center;margin-bottom:14px" data-i18n="kit.pay.reg.note"></p>
     <button class="btn btn-primary btn-full" onclick="closeModal('saved-modal')" data-i18n="btn.understood"></button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="kit-payment-modal">
+  <div class="modal" style="max-width:400px">
+    <div style="font-size:2em;text-align:center;margin-bottom:4px">💳</div>
+    <h3 style="text-align:center;margin-bottom:4px" data-i18n="kit.pay.title"></h3>
+    <div style="text-align:center;color:var(--gold);font-size:1.6em;font-weight:700;margin-bottom:14px" id="kit-pay-total"></div>
+    <div style="display:flex;justify-content:center;margin-bottom:14px">
+      <div id="kit-qrcode" style="background:#fff;padding:10px;border-radius:8px;line-height:0"></div>
+    </div>
+    <div id="kit-pay-variable-notice" style="display:none;background:rgba(255,180,0,.1);border:1px solid var(--gold);border-radius:7px;padding:10px 12px;margin-bottom:12px;text-align:center">
+      <div style="font-size:1.3em;margin-bottom:4px">⚠️</div>
+      <div style="font-size:.84em;color:var(--fg)" data-i18n="kit.pay.variable.notice"></div>
+      <div style="font-size:1.15em;font-weight:700;color:var(--gold);margin-top:6px" id="kit-pay-amount-hint"></div>
+    </div>
+    <div id="kit-pay-fixed-note" style="display:none;font-size:.8em;color:var(--success);text-align:center;margin-bottom:10px" data-i18n="kit.pay.fixed.note"></div>
+    <div class="pix-box" style="margin-bottom:6px">
+      <p style="font-size:.74em;color:#666;margin-bottom:3px" data-i18n="modal.pix.key"></p>
+      <span class="pix-key" id="kit-pay-code" onclick="copyKitPix()" title="Click to copy / Clique para copiar" style="font-size:.7em;word-break:break-all">—</span>
+    </div>
+    <p style="font-size:.7em;color:#555;margin-bottom:14px;text-align:center" data-i18n="modal.pix.note"></p>
+    <button class="btn btn-primary btn-full" onclick="closeModal('kit-payment-modal')" data-i18n="btn.understood"></button>
   </div>
 </div>
 
@@ -1075,6 +1094,9 @@ footer { text-align:center; padding:16px; color:#333; font-size:.75em;
 const ADMIN_EMAILS = ['marcello.barros.rj@gmail.com', 'admin@lemc.com'];
 const ADMIN_SECRET = 'lemc2026';
 let KIT_PRICE    = 72;
+const PIX_FIXED_80 = '00020126710014BR.GOV.BCB.PIX0111045349937650234Kit 8o Encontro LEMC - Munich 2026520400005303986540580.005802BR5925MARCELLO BARROS DE OLIVEI6008BRASILIA62070503***6304C6A6';
+const PIX_FIXED_75 = '00020126710014BR.GOV.BCB.PIX0111045349937650234Kit 8o Encontro LEMC - Munich 2026520400005303986540575.005802BR5925MARCELLO BARROS DE OLIVEI6008BRASILIA62070503***630479DC';
+const PIX_VARIABLE = '00020126330014BR.GOV.BCB.PIX0111045349937655204000053039865802BR5925MARCELLO BARROS DE OLIVEI6008BRASILIA62070503***6304A77A';
 let COMP_SHIRT   = 44;
 let COMP_CUP     = 12;
 
@@ -1238,6 +1260,10 @@ const TRANS = {
     'kit.order.cart.empty':'Nenhum item extra adicionado.',
     'kit.order.total.label':'Total do Pedido',
     'kit.order.save':'Salvar Pedido de Kit',
+    'kit.pay.title':'Pagamento do Kit',
+    'kit.pay.fixed.note':'✅ Valor já incluído no QR Code — basta escanear e confirmar.',
+    'kit.pay.variable.notice':'Este pedido possui itens adicionais. Ao realizar o PIX, informe o valor total abaixo.',
+    'kit.pay.reg.note':'Acesse a aba Kit para configurar e pagar seu pedido.',
     'kit.order.saved':'Pedido de kit salvo com sucesso!',
     'kit.order.noReg':'Preencha sua inscrição antes de salvar o pedido de kit.',
     'kit.order.err.size':'Selecione o tamanho para todos os itens de camiseta no carrinho.',
@@ -1333,6 +1359,10 @@ const TRANS = {
     'kit.order.cart.empty':'No extra items added.',
     'kit.order.total.label':'Order Total',
     'kit.order.save':'Save Kit Order',
+    'kit.pay.title':'Kit Payment',
+    'kit.pay.fixed.note':'✅ Amount is pre-filled in the QR Code — just scan and confirm.',
+    'kit.pay.variable.notice':'This order includes additional items. When making the PIX payment, enter the total amount shown below.',
+    'kit.pay.reg.note':'Go to the Kit tab to set up and pay for your order.',
     'kit.order.saved':'Kit order saved successfully!',
     'kit.order.noReg':'Please complete your registration before saving the kit order.',
     'kit.order.err.size':'Select a size for all shirt items in the cart.',
@@ -1705,7 +1735,6 @@ async function saveProfile() {
     ${departDate?`<div class="sum-item"><span>${t('travel.deptdate')}:</span><span>${departDate}${departNum?' · '+departNum:''}</span></div>`:''}
     ${companion?`<div class="sum-item"><span>${t('sec.companion').replace('👥 ','')}:</span><span>${companion.name}</span></div>`:''}
   `;
-  document.getElementById('modal-pix').textContent=await DB.pix();
   openModal('saved-modal');
 }
 
@@ -1953,13 +1982,38 @@ async function generatePDF() {
 }
 
 // ══════════════════════════════════════════
-//  PIX
+//  PIX / KIT PAYMENT
 // ══════════════════════════════════════════
 async function openPixModal() { document.getElementById('pix-input').value=await DB.pix(); openModal('pix-modal'); }
 async function savePix() { const v=document.getElementById('pix-input').value.trim(); if(v) await DB.setPix(v); closeModal('pix-modal'); }
-function copyPix() {
-  const el=document.getElementById('modal-pix');
-  navigator.clipboard.writeText(el.textContent).then(()=>{ const o=el.textContent; el.textContent='✓ Copiado / Copied!'; setTimeout(()=>el.textContent=o,1500); });
+
+function openKitPaymentModal(total) {
+  const isFixed80 = total === 80;
+  const isFixed75 = total === 75;
+  const isFixed   = isFixed80 || isFixed75;
+  const pixCode   = isFixed80 ? PIX_FIXED_80 : (isFixed75 ? PIX_FIXED_75 : PIX_VARIABLE);
+
+  document.getElementById('kit-pay-total').textContent = `R$ ${total},00`;
+  document.getElementById('kit-pay-code').textContent  = pixCode;
+  document.getElementById('kit-pay-variable-notice').style.display = isFixed ? 'none' : '';
+  document.getElementById('kit-pay-fixed-note').style.display      = isFixed ? ''     : 'none';
+  if (!isFixed) document.getElementById('kit-pay-amount-hint').textContent = `R$ ${total},00`;
+
+  // Generate QR code (clear previous first)
+  const qrEl = document.getElementById('kit-qrcode');
+  qrEl.innerHTML = '';
+  new QRCode(qrEl, { text: pixCode, width: 220, height: 220,
+    colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+
+  openModal('kit-payment-modal');
+}
+
+function copyKitPix() {
+  const el = document.getElementById('kit-pay-code');
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const o = el.textContent; el.textContent = '✓ Copiado / Copied!';
+    setTimeout(() => el.textContent = o, 1800);
+  });
 }
 
 // ══════════════════════════════════════════
@@ -2276,8 +2330,8 @@ async function saveKitOrder() {
   const kitTotal = kitQty * unitPrice + extrasTotal;
   const updated = { ...existing, kitQty, kitSleeve, kitTotal, kitExtraItems: kitCart, shirtSize: kitShirtSize };
   await DB.upsertReg(updated);
-  alertEl.innerHTML = `<div class="alert alert-s">${t('kit.order.saved')}</div>`;
-  setTimeout(() => alertEl.innerHTML = '', 3500);
+  alertEl.innerHTML = '';
+  openKitPaymentModal(kitTotal);
 }
 
 // ── ADMIN KIT MANAGEMENT ──
